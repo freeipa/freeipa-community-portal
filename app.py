@@ -4,7 +4,7 @@ from model.user import User
 
 app = Flask(__name__)
 
-api.bootstrap(context="client")
+api.bootstrap(context="cli")
 api.finalize()
 api.Backend.rpcclient.connect()
 
@@ -28,5 +28,4 @@ def complete():
 
 
 if __name__ == "__main__":
-    app.debug = True
     app.run()
