@@ -20,6 +20,7 @@ def new_user():
     if request.method == "POST": 
         errors = user.save()
         if not errors:
+            # email the admin that a user has signed up
             SignUpMailer(user).mail()
             return redirect(url_for("complete"))
     return render_template("new_user.html", user=user, errors=errors)
@@ -30,5 +31,6 @@ def complete():
 
 
 if __name__ == "__main__":
-    app.debug = True
+    # Uncomment for debugging. Breaks ipalib for some reason.
+    # app.debug = True
     app.run()
