@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from ipalib import api
 from model.user import User
+from mailers.sign_up_mailer import SignUpMailer
 
 app = Flask(__name__)
 
@@ -19,6 +20,7 @@ def new_user():
     if request.method == "POST": 
         errors = user.save()
         if not errors:
+            SignUpMailer(user).mail()
             return redirect(url_for("complete"))
     return render_template("new_user.html", user=user, errors=errors)
 
@@ -28,4 +30,5 @@ def complete():
 
 
 if __name__ == "__main__":
+    app.debug = True
     app.run()

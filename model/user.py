@@ -4,11 +4,11 @@ class User(object):
     def __init__(self, args = {}):
         self.given_name = args.get("given_name", "")
         self.family_name = args.get("family_name", "")
+        self.username = args.get("username", "")
+        if not self.username and self.given_name:
+            # if the username is blank, set it to a default
+            self.username = self.given_name[0] + self.family_name
         self.email = args.get("email", "")
-
-    def isValid(self):
-        """Check to see if the model is valid, before it is saved"""
-        return self.given_name and self.family_name and self.email
 
     def save(self):
         """Save the model
@@ -24,10 +24,9 @@ class User(object):
             api.Command.stageuser_add(
                 givenname=self.given_name, 
                 sn=self.family_name,
+                uid=self.username,
                 mail=self.email
             )
-        except (errors.ValidationError, errors.RequirementError) as e:
+        except (errors.ValidationError, errors.RequirementError, errors.DuplicateEntry) as e:
             error = e.msg
-        except AttributeError as e:
-            print e
         return error

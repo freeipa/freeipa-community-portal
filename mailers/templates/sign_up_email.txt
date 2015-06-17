@@ -1,0 +1,8 @@
+This is a notification that a user has requested an account on your site.
+
+     Given Name: {{ user.given_name }}
+    Family Name: {{ user.family_name }}
+       Username: {{ user.username }}
+          Email: {{ user.email }}
+
+This new account is in the user staging area, where it can be approved or deleted
