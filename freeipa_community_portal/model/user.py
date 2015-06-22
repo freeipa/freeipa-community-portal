@@ -21,14 +21,17 @@ class User(object):
         """
         error = None
         try:
-            api.Command.user_add(
-                givenname=self.given_name, 
-                sn=self.family_name,
-                uid=self.username,
-                mail=self.email
-            )
+            self._call_api()
         except (errors.ValidationError, errors.RequirementError, errors.DuplicateEntry) as e:
             error = e.msg
         except AttributeError as e:
             print e
         return error
+
+    def _call_api(self):
+        api.Command.user_add(
+            givenname=self.given_name, 
+            sn=self.family_name,
+            uid=self.username,
+            mail=self.email
+        )
