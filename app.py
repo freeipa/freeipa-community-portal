@@ -1,36 +1,49 @@
-from flask import Flask, render_template, request, redirect, url_for
-from ipalib import api
-from model.user import User
+import cherrypy
+import jinja2
+
 from mailers.sign_up_mailer import SignUpMailer
+from model.user import User
 
-app = Flask(__name__)
+template_env = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'))
 
-api.bootstrap(context="cli")
-api.finalize()
-api.Backend.rpcclient.connect()
+class SelfServicePortal(object):
+    @cherrypy.expose
+    def index(self):
+        return "Hello, World!"
 
-@app.route("/")
-def hello():
-    return "Hello, world!"
+    @cherrypy.expose
+    def complete(self):
+        return template_env.get_template('complete.html').render()
 
-@app.route("/user", methods=["GET","POST"])
-def new_user():
-    user = User(request.form)
-    errors = None
-    if request.method == "POST": 
+class SelfServiceUserRegistration(object):
+    exposed = True
+
+    def GET(self):
+        return self.render_registration_form()
+
+    def POST(self, **kwargs):
+        user = User(kwargs)
         errors = user.save()
         if not errors:
-            # email the admin that a user has signed up
+            # email the admin that the user has signed up
             SignUpMailer(user).mail()
-            return redirect(url_for("complete"))
-    return render_template("new_user.html", user=user, errors=errors)
+            raise cherrypy.HTTPRedirect('/complete')
+        return self.render_registration_form(user, errors)
 
-@app.route("/complete")
-def complete():
-    return render_template("complete.html")
-
+    def render_registration_form(self, user=User(), errors=None):
+        return template_env \
+            .get_template('new_user.html') \
+            .render(user=user, errors=errors) 
 
 if __name__ == "__main__":
-    # Uncomment for debugging. Breaks ipalib for some reason.
-    # app.debug = True
-    app.run()
+    conf = {
+        '/user': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+            'tools.response_headers.on': True,
+            # 'tools.response_headers.headers': [('Content-Type', 'text/plain')]
+        }
+    }
+
+    webapp = SelfServicePortal()
+    webapp.user = SelfServiceUserRegistration()
+    cherrypy.quickstart(webapp, '/', conf)

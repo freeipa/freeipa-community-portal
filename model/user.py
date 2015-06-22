@@ -21,7 +21,7 @@ class User(object):
         """
         error = None
         try:
-            api.Command.stageuser_add(
+            api.Command.user_add(
                 givenname=self.given_name, 
                 sn=self.family_name,
                 uid=self.username,
@@ -29,4 +29,6 @@ class User(object):
             )
         except (errors.ValidationError, errors.RequirementError, errors.DuplicateEntry) as e:
             error = e.msg
+        except AttributeError as e:
+            print e
         return error
