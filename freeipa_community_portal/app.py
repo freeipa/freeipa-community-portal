@@ -8,7 +8,7 @@ import jinja2
 from freeipa_community_portal.mailers.sign_up_mailer import SignUpMailer
 from freeipa_community_portal.model.user import User
 
-TEMPLATE_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'))
+TEMPLATE_ENV = jinja2.Environment(loader=jinja2.PackageLoader('freeipa_community_portal','templates'))
 
 class SelfServicePortal(object):
     """ The class for all bare pages which don't require REST logic """
