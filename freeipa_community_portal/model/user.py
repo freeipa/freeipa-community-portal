@@ -1,10 +1,10 @@
 """ User model """
 from ipalib import api, errors
 
-class User(object):
+class User(object): # pylint: disable=too-few-public-methods
     """ User model
 
-    Represents a user inside of the community portal, and contains code to 
+    Represents a user inside of the community portal, and contains code to
     commit changes to the ipa server
     """
     def __init__(self, args=None):
@@ -33,12 +33,12 @@ class User(object):
             self._call_api()
         except (errors.ValidationError, errors.RequirementError, errors.DuplicateEntry) as err:
             error = err.msg
-        except AttributeError as err:
-            print err
         return error
 
     def _call_api(self):
-        api.Command.user_add(
+        """performs the actual API call. seperate method for testing purposes
+        """
+        api.Command.user_add( # pylint: disable=no-member
             givenname=self.given_name,
             sn=self.family_name,
             uid=self.username,
