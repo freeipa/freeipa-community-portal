@@ -1,7 +1,16 @@
+""" User model """
 from ipalib import api, errors
 
 class User(object):
-    def __init__(self, args = {}):
+    """ User model
+
+    Represents a user inside of the community portal, and contains code to 
+    commit changes to the ipa server
+    """
+    def __init__(self, args=None):
+        """ Takes a dictionary of attributes to assign to the user """
+        if args is None:
+            args = {}
         self.given_name = args.get("given_name", "")
         self.family_name = args.get("family_name", "")
         self.username = args.get("username", "")
@@ -22,15 +31,15 @@ class User(object):
         error = None
         try:
             self._call_api()
-        except (errors.ValidationError, errors.RequirementError, errors.DuplicateEntry) as e:
-            error = e.msg
-        except AttributeError as e:
-            print e
+        except (errors.ValidationError, errors.RequirementError, errors.DuplicateEntry) as err:
+            error = err.msg
+        except AttributeError as err:
+            print err
         return error
 
     def _call_api(self):
         api.Command.user_add(
-            givenname=self.given_name, 
+            givenname=self.given_name,
             sn=self.family_name,
             uid=self.username,
             mail=self.email

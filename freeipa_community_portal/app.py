@@ -1,39 +1,49 @@
+"""
+The main web server for the FreeIPA community portal.
+"""
+
 import cherrypy
 import jinja2
 
-from mailers.sign_up_mailer import SignUpMailer
-from model.user import User
+from freeipa_community_portal.mailers.sign_up_mailer import SignUpMailer
+from freeipa_community_portal.model.user import User
 
-template_env = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'))
+TEMPLATE_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader('templates'))
 
 class SelfServicePortal(object):
+    """ The class for all bare pages which don't require REST logic """
     @cherrypy.expose
     def index(self):
+        """/index"""
         return "Hello, World!"
 
     @cherrypy.expose
     def complete(self):
-        return template_env.get_template('complete.html').render()
+        """/complete"""
+        return TEMPLATE_ENV.get_template('complete.html').render()
 
 class SelfServiceUserRegistration(object):
+    """Class for self-service user registration, which requires REST features"""
     exposed = True
 
     def GET(self):
-        return self.render_registration_form()
+        """GET /user"""
+        return self._render_registration_form()
 
     def POST(self, **kwargs):
+        """POST /user"""
         user = User(kwargs)
         errors = user.save()
         if not errors:
             # email the admin that the user has signed up
             SignUpMailer(user).mail()
             raise cherrypy.HTTPRedirect('/complete')
-        return self.render_registration_form(user, errors)
+        return self._render_registration_form(user, errors)
 
-    def render_registration_form(self, user=User(), errors=None):
-        return template_env \
+    def _render_registration_form(self, user=User(), errors=None):
+        return TEMPLATE_ENV \
             .get_template('new_user.html') \
-            .render(user=user, errors=errors) 
+            .render(user=user, errors=errors)
 
 if __name__ == "__main__":
     conf = {

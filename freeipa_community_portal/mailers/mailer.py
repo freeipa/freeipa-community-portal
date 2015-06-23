@@ -1,15 +1,18 @@
+""" Contains the base class for sending mail """
 from email.mime.multipart import MIMEMultipart
-from email.MIMEText import MIMEText
+from email.mime.text import MIMEText
 # import smtplib
 
 from jinja2 import Environment, FileSystemLoader
 
 class Mailer(object):
+    """ Base class for sending mail """
     env = Environment(loader=FileSystemLoader('mailers/templates'))
 
     def __init__(self):
         self.subject = "FreeIPA Community Portal: Notice"
-        pass
+        self.template = 'default.txt'
+        self.template_opts = {}
 
     def mail(self):
         """Send the mail"""

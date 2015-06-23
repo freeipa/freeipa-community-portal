@@ -1,0 +1,4 @@
+Something has happened on your FreeIPA portal, which the program authors feels
+you should be notified about. However, the program is misconfigured and you
+got this generic message instead. Please contact the software maintainer and
+alert them that this has occurred.

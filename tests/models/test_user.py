@@ -1,6 +1,7 @@
 import pytest
 import freeipa_community_portal.model.user
 from freeipa_community_portal.model.user import User
+# User = freeipa_community_portal.model.user.User
 
 
 def test_user_init():
