@@ -1,3 +1,22 @@
+# Authors:
+#   Drew Erny <derny@redhat.com>
+#
+# Copyright (C) 2015  Red Hat
+# see file 'COPYING' for use and warranty information
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """ User model """
 from ipalib import api, errors
 
@@ -38,6 +57,9 @@ class User(object): # pylint: disable=too-few-public-methods
     def _call_api(self):
         """performs the actual API call. seperate method for testing purposes
         """
+        if not api.Backend.rpcclient.isconnected():
+            api.Backend.rpcclient.connect()
+
         api.Command.user_add( # pylint: disable=no-member
             givenname=self.given_name,
             sn=self.family_name,
