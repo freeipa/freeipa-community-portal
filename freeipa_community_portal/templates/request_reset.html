@@ -1,0 +1,18 @@
+{# password reset request form #}
+
+{% extends "layout.html" %}
+{% block content %}
+
+<div>
+    <form action="/request_reset" method="POST">
+        <div>
+            <label>Username:</label>
+            <input type="text" name="username">
+        </div>
+        <div class="button">
+            <button type="submit">Request Reset</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

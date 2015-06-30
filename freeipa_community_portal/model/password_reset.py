@@ -5,7 +5,7 @@ import base64
 from sqlalchemy import Table, Column, MetaData, String, DateTime, create_engine
 from sqlalchemy.sql import select, insert, delete
 
-_engine = create_engine('sqlite:///:memory:', echo=True)
+_engine = create_engine('sqlite:///database.db', echo=True)
 
 _metadata = MetaData()
 _password_reset = Table('password_reset', _metadata,
@@ -49,7 +49,7 @@ class PasswordReset(object):
         # or the result is too old, expire the result and return None
         elif (datetime.now() - row['timestamp']) > USE_BY:
             reset = None
-            PasswordReset._expire(row['username'])
+            PasswordReset.expire(row['username'])
         # but if the result is valid...
         else:
             reset = PasswordReset(row['username'])
@@ -62,7 +62,7 @@ class PasswordReset(object):
 
     def save(self):
         conn = _engine.connect()
-        self._expire(self.username)
+        self.expire(self.username)
         conn.execute(
             _password_reset.insert().values(
                 username=self.username,
@@ -72,8 +72,12 @@ class PasswordReset(object):
         )
         conn.close()
 
+    def reset_password(self):
+        """Calls the IPA API and sets the password to a new, random value"""
+        return base64.urlsafe_b64encode(os.urandom(8)).rstrip('=')
+
     @staticmethod
-    def _expire(username):
+    def expire(username):
         conn = _engine.connect()
         conn.execute(
             delete(_password_reset).where(_password_reset.c.username == username)

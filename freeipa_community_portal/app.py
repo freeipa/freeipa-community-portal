@@ -25,7 +25,9 @@ import cherrypy
 import jinja2
 
 from freeipa_community_portal.mailers.sign_up_mailer import SignUpMailer
+from freeipa_community_portal.mailers.reset_password_mailer import ResetPasswordMailer
 from freeipa_community_portal.model.user import User
+from freeipa_community_portal.model.password_reset import PasswordReset
 
 TEMPLATE_ENV = jinja2.Environment(loader=jinja2.PackageLoader('freeipa_community_portal','templates'))
 
@@ -42,6 +44,7 @@ class SelfServicePortal(object):
         """/complete"""
         # pylint: disable=no-member
         return TEMPLATE_ENV.get_template('complete.html').render()
+
 
 class SelfServiceUserRegistration(object):
     """Class for self-service user registration, which requires REST features"""
@@ -69,6 +72,68 @@ class SelfServiceUserRegistration(object):
             .get_template('new_user.html') \
             .render(user=user, errors=errors)
 
+
+class RequestSelfServicePasswordReset(object):
+    """Handles requesting a password reset
+    
+    GET, POST /request_reset
+    """
+    exposed = True
+
+    def GET(self):
+        """returns the request form"""
+        return render('request_reset.html')
+
+    def POST(self, **kwargs):
+        """accepts a username and initiates a reset"""
+        r = PasswordReset(kwargs['username'])
+        r.save()
+        ResetPasswordMailer(r).mail()
+        raise cherrypy.HTTPRedirect('/complete')
+
+class SelfServicePasswordReset(object):
+    """Handles the actual reset of the password
+
+    GET, POST /reset_password
+    """
+    exposed = True
+
+    def GET(self, **params):
+        """Renders the reset request form.
+        
+        if username and/or token are supplied in the querystring, pre-fills the
+        form for the user
+        """
+        username = params.get('username', '')
+        token = params.get('token', '')
+        return render('reset_password.html',username=username,token=token)
+
+    def POST(self, **params):
+        if 'username' not in params or 'token' not in params:
+            return render('reset_password.html',
+                username=params.get('username',''),
+                token=params.get('token',''),
+                error='All fields are required'
+            )
+        else:
+            p = PasswordReset.load(params['username'])
+            if p is not None and p.token == params['token']:
+                new_pass = p.reset_password()
+                PasswordReset.expire(params['username'])
+                return render('display_password.html', password=new_pass)
+            else:
+                PasswordReset.expire(params['username'])
+                return render('invalid_token.html')
+
+
+    def _render_reset_form(username, token, errors=None):
+        return TEMPLATE_ENV \
+            .get_template('reset_password.html') \
+            .render(username=username, token=token)
+
+def render(template, **args):
+    return TEMPLATE_ENV.get_template(template).render(**args)
+
 def main():
     """Main entry point for the web application. If you run this library as a
     standalone application, you can just use this function
@@ -79,11 +144,21 @@ def main():
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
             'tools.response_headers.on': True,
             # 'tools.response_headers.headers': [('Content-Type', 'text/plain')]
+        },
+        '/request_reset': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+            'tools.response_headers.on': True,
+        },
+        '/reset_password': {
+            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+            'tools.response_headers.on': True,
         }
     }
 
     webapp = SelfServicePortal()
     webapp.user = SelfServiceUserRegistration() # pylint: disable=attribute-defined-outside-init
+    webapp.request_reset = RequestSelfServicePasswordReset()
+    webapp.reset_password = SelfServicePasswordReset()
     cherrypy.quickstart(webapp, '/', conf)
 
 if __name__ == "__main__":
