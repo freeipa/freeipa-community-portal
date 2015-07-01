@@ -1,9 +1,30 @@
+# Authors:
+#   Drew Erny <derny@redhat.com>
+#
+# Copyright (C) 2015  Red Hat
+# see file 'COPYING' for use and warranty information
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from datetime import datetime, timedelta
 import os
 import base64
 
 from sqlalchemy import Table, Column, MetaData, String, DateTime, create_engine
 from sqlalchemy.sql import select, insert, delete
+
+from ipalib import api, errors
 
 _engine = create_engine('sqlite:///database.db', echo=True)
 
@@ -25,6 +46,8 @@ class PasswordReset(object):
         self.username = username
         self.token = base64.urlsafe_b64encode(os.urandom(8)).rstrip('=')
         self.timestamp = datetime.now()
+        self.email = None
+        self._valid = None
 
     @staticmethod
     def load(username):
@@ -61,20 +84,50 @@ class PasswordReset(object):
         return reset
 
     def save(self):
-        conn = _engine.connect()
-        self.expire(self.username)
-        conn.execute(
-            _password_reset.insert().values(
-                username=self.username,
-                token=self.token,
-                timestamp = self.timestamp
+        if self.check_valid():
+            conn = _engine.connect()
+            self.expire(self.username)
+            conn.execute(
+                _password_reset.insert().values(
+                    username=self.username,
+                    token=self.token,
+                    timestamp = self.timestamp
+                )
             )
-        )
-        conn.close()
+            conn.close()
+
+    def check_valid(self):
+        """checks the validity of the the user provided by querying the ipa
+        server
+        """
+        if self._valid is not None:
+            return self._valid
+
+        try:
+            if not api.Backend.rpcclient.isconnected():
+                api.Backend.rpcclient.connect()
+            response = api.Command.user_show(uid=self.username)
+        except errors.NotFound:
+            self._valid = False
+            return self._valid
+
+        # TODO: repent
+        if response['result'].has_key('mail') \
+                and response['result']['mail'] is not None \
+                and not response['result']['mail'][0].isspace():
+            self.email = response['result']['mail'][0]
+            self._valid = True
+        else:
+            self._valid = False
+        return self._valid
 
     def reset_password(self):
         """Calls the IPA API and sets the password to a new, random value"""
-        return base64.urlsafe_b64encode(os.urandom(8)).rstrip('=')
+        newpass = base64.urlsafe_b64encode(os.urandom(8)).rstrip('=')
+        if not api.Backend.rpcclient.isconnected():
+            api.Backend.rpcclient.connect()
+        api.Command.passwd(self.username, password=unicode(newpass))
+        return newpass
 
     @staticmethod
     def expire(username):

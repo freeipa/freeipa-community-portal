@@ -22,6 +22,8 @@ from freeipa_community_portal.mailers.mailer import Mailer
 class ResetPasswordMailer(Mailer):
     def __init__(self, reset):
         super(self.__class__, self).__init__()
+        reset.check_valid()
+        self.to = reset.email
         self.subject = "FreeIPA Community Portal: Reset Password"
         self.template = "reset_password_email.txt"
         self.template_opts = {'reset_info': reset}

@@ -88,7 +88,8 @@ class RequestSelfServicePasswordReset(object):
         """accepts a username and initiates a reset"""
         r = PasswordReset(kwargs['username'])
         r.save()
-        ResetPasswordMailer(r).mail()
+        if r.check_valid():
+            ResetPasswordMailer(r).mail()
         raise cherrypy.HTTPRedirect('/complete')
 
 class SelfServicePasswordReset(object):

@@ -31,6 +31,10 @@ class Mailer(object):
     def __init__(self):
         self.subject = "FreeIPA Community Portal: Notice"
         self.template = 'default.txt'
+        # TODO: fix this
+        self.to = 'derny@redhat.com'
+        # TODO: fix this
+        self.frm = 'derny@redhat.com'
         self.template_opts = {}
 
     def mail(self):
@@ -41,8 +45,8 @@ class Mailer(object):
     def _build(self, template, template_opts):
         msg = MIMEMultipart()
         # TODO: change this to be configurable
-        msg['From'] = 'derny@redhat.com'
-        msg['To'] = 'derny@redhat.com'
+        msg['From'] = self.frm
+        msg['To'] = self.to
         msg['Subject'] = self.subject
         body = self.env.get_template(template).render(template_opts)
         msg.attach(MIMEText(body, 'plain'))
