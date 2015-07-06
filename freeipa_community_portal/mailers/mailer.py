@@ -20,9 +20,11 @@
 """ Contains the base class for sending mail """
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-# import smtplib
+import smtplib
 
 from jinja2 import Environment, PackageLoader
+
+MAIL_SERVER = 'smtp.corp.redhat.com'
 
 class Mailer(object):
     """ Base class for sending mail """
@@ -53,5 +55,10 @@ class Mailer(object):
         return msg
 
     def _send(self, contents):
-        # TODO: Actually send email
+        server = smtplib.SMTP(MAIL_SERVER)
+        print "server object created"
+        server.starttls();
+        print "tls started"
+        server.sendmail(contents['From'], contents['To'], contents.as_string())
+        print "mail sent"
         print contents
