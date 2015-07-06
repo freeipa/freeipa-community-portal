@@ -24,6 +24,7 @@ import smtplib
 
 from jinja2 import Environment, PackageLoader
 
+# TODO: move this stuff to a config file
 MAIL_SERVER = 'smtp.corp.redhat.com'
 
 class Mailer(object):
