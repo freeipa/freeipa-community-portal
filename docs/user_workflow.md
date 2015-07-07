@@ -67,3 +67,11 @@ self-service user registration form and the password reset initiation form. The
 password reset completion form is probably not susceptible to abuse and does
 not need a captcha. The captcha is presented as a small jpeg image and is
 transmitted to the client through a data uri. 
+
+## More Information ##
+
+A more technical guide to the workings of the Community Portal can be found at
+these pages:
+
+http://www.freeipa.org/page/V4/Community_Portal
+http://www.freeipa.org/page/V4/Self_Service_Password_Reset
