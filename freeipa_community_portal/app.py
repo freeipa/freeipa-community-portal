@@ -28,6 +28,7 @@ from freeipa_community_portal.mailers.sign_up_mailer import SignUpMailer
 from freeipa_community_portal.mailers.reset_password_mailer import ResetPasswordMailer
 from freeipa_community_portal.model.user import User
 from freeipa_community_portal.model.password_reset import PasswordReset
+import freeipa_community_portal.helpers.captcha_helper as captcha_helper
 
 TEMPLATE_ENV = jinja2.Environment(loader=jinja2.PackageLoader('freeipa_community_portal','templates'))
 
@@ -58,7 +59,9 @@ class SelfServiceUserRegistration(object):
     def POST(self, **kwargs): # pylint: disable=invalid-name
         """POST /user"""
         user = User(kwargs)
-        errors = user.save()
+        errors = check_captcha(kwargs)
+        if not errors: 
+            errors = user.save()
         if not errors:
             # email the admin that the user has signed up
             SignUpMailer(user).mail()
@@ -68,9 +71,11 @@ class SelfServiceUserRegistration(object):
     def _render_registration_form(self, user=User(), errors=None): # pylint: disable=no-self-use
         """renders the registration form. private."""
         # pylint: disable=no-member
+        captcha = captcha_helper.CaptchaHelper()
+
         return TEMPLATE_ENV \
             .get_template('new_user.html') \
-            .render(user=user, errors=errors)
+            .render(user=user, errors=errors, captcha=captcha)
 
 
 class RequestSelfServicePasswordReset(object):
@@ -82,10 +87,16 @@ class RequestSelfServicePasswordReset(object):
 
     def GET(self):
         """returns the request form"""
-        return render('request_reset.html')
+        captcha = captcha_helper.CaptchaHelper()
+        return render('request_reset.html', captcha=captcha)
 
     def POST(self, **kwargs):
         """accepts a username and initiates a reset"""
+        errors = check_captcha(kwargs)
+        if not errors and not kwargs['username']:
+            errors = "Username is required"
+        if errors:
+            return render('request_reset.html', errors=errors, captcha=captcha_helper.CaptchaHelper())
         r = PasswordReset(kwargs['username'])
         r.save()
         if r.check_valid():
@@ -134,6 +145,12 @@ class SelfServicePasswordReset(object):
 
 def render(template, **args):
     return TEMPLATE_ENV.get_template(template).render(**args)
+
+def check_captcha(args):
+    if not captcha_helper.checkResponse(args['response'], args['solution']):
+        return "Incorrect Captcha response"
+    else:
+        return None
 
 def main():
     """Main entry point for the web application. If you run this library as a
