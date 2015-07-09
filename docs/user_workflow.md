@@ -60,14 +60,6 @@ expired and they must restart the process. The user is not informed what
 specific error has occurred, to avoid using the password reset feature to probe
 for the existance of usernames. 
 
-## The Captcha ##
-
-A captcha is present on each form with the potential for abuse, namely the
-self-service user registration form and the password reset initiation form. The
-password reset completion form is probably not susceptible to abuse and does
-not need a captcha. The captcha is presented as a small jpeg image and is
-transmitted to the client through a data uri. 
-
 ## More Information ##
 
 A more technical guide to the workings of the Community Portal can be found at
