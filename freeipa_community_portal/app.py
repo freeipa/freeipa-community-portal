@@ -28,7 +28,8 @@ from freeipa_community_portal.mailers.sign_up_mailer import SignUpMailer
 from freeipa_community_portal.mailers.reset_password_mailer import ResetPasswordMailer
 from freeipa_community_portal.model.user import User
 from freeipa_community_portal.model.password_reset import PasswordReset
-import freeipa_community_portal.helpers.captcha_helper as captcha_helper
+# TODO: move over to a "from" import
+import freeipa_community_portal.model.captcha as captcha_helper
 
 TEMPLATE_ENV = jinja2.Environment(loader=jinja2.PackageLoader('freeipa_community_portal','templates'))
 
