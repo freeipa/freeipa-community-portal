@@ -7,15 +7,14 @@ import string
 import random
 import base64
 import hmac
+import os
 
 from sqlalchemy import Table, Column, MetaData, String, DateTime, create_engine
 from sqlalchemy.sql import select, insert, delete
 
 LENGTH = 4
-# TODO: this is not a secure key
-KEY = 'lol you should probably change this'
+KEY = os.urandom(8)
 
-#TODO: fix this so that it uses in-memory database
 _engine = create_engine('sqlite:///captcha.db', echo=True)
 _metadata = MetaData()
 _captcha = Table('captcha', _metadata,
@@ -23,7 +22,6 @@ _captcha = Table('captcha', _metadata,
     Column('timestamp', DateTime)
 )
 _metadata.create_all(_engine)
-USE_BY = timedelta(days=1)
 
 class CaptchaHelper(object):
     """Class for making a captcha for the client to display."""

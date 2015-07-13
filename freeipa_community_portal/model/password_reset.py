@@ -111,7 +111,7 @@ class PasswordReset(object):
             self._valid = False
             return self._valid
 
-        # TODO: repent
+        # i'm sorry mom
         if response['result'].has_key('mail') \
                 and response['result']['mail'] is not None \
                 and not response['result']['mail'][0].isspace():
