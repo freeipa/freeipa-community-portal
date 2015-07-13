@@ -1,4 +1,5 @@
 """ Module for handling captchas in the community portal. """
+
 from captcha.image import ImageCaptcha
 import string
 import random

@@ -29,7 +29,7 @@ from freeipa_community_portal.mailers.reset_password_mailer import ResetPassword
 from freeipa_community_portal.model.user import User
 from freeipa_community_portal.model.password_reset import PasswordReset
 # TODO: move over to a "from" import
-import freeipa_community_portal.model.captcha as captcha_helper
+import freeipa_community_portal.model.captcha_wrapper as captcha_helper
 
 TEMPLATE_ENV = jinja2.Environment(loader=jinja2.PackageLoader('freeipa_community_portal','templates'))
 
@@ -159,6 +159,10 @@ def main():
     """
 
     conf = {
+        '/assets':  {
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': '/home/derny/freeipa/community_portal/freeipa_community_portal/assets'
+        },
         '/user': {
             'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
             'tools.response_headers.on': True,
