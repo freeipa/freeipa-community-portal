@@ -4,11 +4,15 @@
 {% block content %}
 <div class="container">
     <h2>Create a new user account</h2>
-    <div class="errors">
+
     {% if errors %}
-        <p>{{ errors }}</p>
-    {% endif %}
+    <div class="row">
+        <div class="alert alert-danger col-sm-offset-2 col-sm-6">
+            <p>{{ errors }}</p>
+        </div>
     </div>
+    {% endif %}
+
     <form action="/user" method="POST" class="form-horizontal">
         <div class="form-group">
             <label for="given_name" class="col-sm-2 control-label">First Name:</label>

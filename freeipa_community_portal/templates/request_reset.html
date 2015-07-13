@@ -3,14 +3,17 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<div class="errors">
-{% if errors %}
-    {{ errors }}
-{% endif %}
-</div>
-
 <div class="container">
     <h2>Request a Password Reset</h2>
+
+    {% if errors %}
+    <div class="row">
+        <div class="alert alert-danger col-sm-offset-2 col-sm-6">
+            <p>{{ errors }}</p>
+        </div>
+    </div>
+    {% endif %}
+
     <form action="/request_reset" method="POST" class="form-horizontal">
         <div class="form-group">
             <label for="username" class="col-sm-2 control-label">Username:</label>
