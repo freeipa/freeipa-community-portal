@@ -8,11 +8,39 @@
 <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
 <!-- patternfly stuff --> 
 <link rel="stylesheet" type="text/css" href="/assets/css/patternfly.css">
+<script src="/assets/js/bootstrap.min.js"></script>
 <script src="/assets/js/patternfly.js"></script>
 </head>
 <body>
-{% block content %}
+<header>
+    <nav class="navbar navbar-default navbar-static-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#portal-navbar" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">FreeIPA Self-Service Portal</a>
+            </div>
 
+            <div class="collapse navbar-collapse" id="portal-navbar">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="/user">New User</a></li>
+                    <li><a href="/request_reset">Request Password Reset</a></li>
+                    <li><a href="/reset_password">Finish Password Reset</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<main>
+{% block content %}
+<div class="container">
+    <h1>Welcome to the FreeIPA Self Service Portal</h1>
+</div>
 {% endblock %}
+</main>
 </body>
 </html>
