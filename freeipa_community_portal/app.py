@@ -39,13 +39,13 @@ class SelfServicePortal(object):
     @cherrypy.expose
     def index(self): # pylint: disable=no-self-use
         """/index"""
-        return "Hello, World!"
+        return render("layout.html")
 
     @cherrypy.expose
     def complete(self): # pylint: disable=no-self-use
         """/complete"""
         # pylint: disable=no-member
-        return TEMPLATE_ENV.get_template('complete.html').render()
+        return render('complete.html')
 
 
 class SelfServiceUserRegistration(object):
@@ -74,9 +74,7 @@ class SelfServiceUserRegistration(object):
         # pylint: disable=no-member
         captcha = captcha_helper.CaptchaHelper()
 
-        return TEMPLATE_ENV \
-            .get_template('new_user.html') \
-            .render(user=user, errors=errors, captcha=captcha)
+        return render('new_user.html', user=user, errors=errors, captcha=captcha)
 
 
 class RequestSelfServicePasswordReset(object):
@@ -103,6 +101,7 @@ class RequestSelfServicePasswordReset(object):
         if r.check_valid():
             ResetPasswordMailer(r).mail()
         raise cherrypy.HTTPRedirect('/complete')
+
 
 class SelfServicePasswordReset(object):
     """Handles the actual reset of the password
@@ -138,11 +137,6 @@ class SelfServicePasswordReset(object):
                 PasswordReset.expire(params['username'])
                 return render('invalid_token.html')
 
-
-    def _render_reset_form(username, token, errors=None):
-        return TEMPLATE_ENV \
-            .get_template('reset_password.html') \
-            .render(username=username, token=token)
 
 def render(template, **args):
     return TEMPLATE_ENV.get_template(template).render(**args)
