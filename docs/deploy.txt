@@ -1,0 +1,14 @@
+# install non-python dependencies
+# gcc, libjpeg-turbo-devel, python-devel is to build Pillow, which is required by captcha
+yum install python-pip git gcc libjpeg-turbo-devel python-devel
+
+# install from source so we get the dependencies we need
+yum install python-pillow
+
+# have to use git because the pip version is out of date
+pip install git+https://github.com/dperny/captcha.git
+pip install cherrypy jinja2 sqlalchemy
+
+# change absolute asset path
+# change to bind on all interfaces
+# add configuration option to set up email

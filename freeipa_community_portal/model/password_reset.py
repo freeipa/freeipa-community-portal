@@ -26,7 +26,7 @@ from sqlalchemy.sql import select, insert, delete
 
 from ipalib import api, errors
 
-_engine = create_engine('sqlite:///database.db', echo=True)
+_engine = create_engine('sqlite:////var/lib/freeipa-community-portal/users.db', echo=True)
 
 _metadata = MetaData()
 _password_reset = Table('password_reset', _metadata,

@@ -21,11 +21,30 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
+import ConfigParser
 
 from jinja2 import Environment, PackageLoader
 
-# TODO: move this stuff to a config file
-MAIL_SERVER = 'smtp.corp.redhat.com'
+# development defaults
+defaults = {
+    "Mailers": {
+        "smtp_server": "smtp.corp.redhat.com",
+        "smtp_use_auth": "False",
+        "smtp_username": "",
+        "smtp_password": "",
+        "default_from_email": "derny@redhat.com"
+        "default_admin_email": "derny@redhat.com"
+    }
+}    
+
+# first, read in the configuration file
+Config = ConfigParser.ConfigParser(defaults)
+# TODO: add the a read from files
+files = Config.read('/etc/freeipa_community_portal.ini')
+
+MAIL_SERVER = Config.get("Mailers","smtp_server")
+DEFAULT_TO = Config.get("Mailers","default_admin_email")
+DEFAULT_FROM = Config.get("Mailers","default_from_email")
 
 class Mailer(object):
     """ Base class for sending mail """
@@ -35,9 +54,9 @@ class Mailer(object):
         self.subject = "FreeIPA Community Portal: Notice"
         self.template = 'default.txt'
         # TODO: fix this
-        self.to = 'derny@redhat.com'
+        self.to = DEFAULT_TO
         # TODO: fix this
-        self.frm = 'derny@redhat.com'
+        self.frm = DEFAULT_FROM
         self.template_opts = {}
 
     def mail(self):

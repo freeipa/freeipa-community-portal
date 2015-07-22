@@ -1,0 +1,137 @@
+#!/usr/bin/python
+
+import logging
+import os
+import shutil
+import sys
+import argparse
+import socket
+
+LOGFILE = '/var/log/freeipa-portal-install.log'
+PORTAL_CONF = '/etc/freeipaportal.conf'
+HTTPD_CONF = '/etc/httpd/conf.d'
+VAR_DIR = '/var/lib/freeipa-community-portal'
+logger = logging.getLogger()
+
+# borrowing a bunch of code from the ipsilon installer
+def openlogs():
+    # we're operating on the global logger
+    global logger
+    
+    # if the logfile is actual a file
+    if os.path.isfile(LOGFILE):
+        try:
+            # we're gonna move it and mark it with the time? i guess?
+            created = '%s' % time.ctime(os.path.getctime(LOGFILE))
+            shutil.move(LOGFILE, '%s.%s' % (LOGFILE, created))
+        except IOError:
+            # and if we can't? pftt. no problem 
+            pass
+    
+    # now we set the logger
+    logger = logging.getLogger()
+
+    # first, we set up the error logger
+    try:
+        # and tell it to use the logfile specified earlier
+        lh = logging.FileHandler(LOGFILE)
+    except IOError as e:
+        # if we can't access that file, print an error message
+        print >> sys.stderr, 'Unable to open %s (%s)' % (LOGFILE, str(e))
+        # and log to stdout
+        lh = logging.StreamHandler(sys.stderr)
+    formatter = logging.Formatter('[%(asctime)s] %(message)s')
+    lh.setFormatter(formatter)
+    lh.setLevel(logging.DEBUG)
+    logger.addHandler(lh)
+    logger.propagate = False
+
+    # then we set up the info logger, which just spews to stdout
+    ch = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter('%(message)s')
+    ch.setFormatter(formatter)
+    ch.setLevel(logging.INFO)
+    logger.addHandler(ch)
+    # TODO: do we need cherrypy here?
+
+def make_apache_conf():
+    """ builds an apache config that might work. not yet implemented """
+    pass
+
+def parse_args():
+    """parses the command line arguments passed in
+
+    return: a list of 
+    """
+    parser = argparse.ArgumentParser(description='FreeIPA Portal Install Options')
+    parser.add_argument('--version', action='version', version='%(prog)s 0.1')
+    parser.add_argument('--uninstall', action='store_true',
+        help="Uninstall the server and all data")
+    parser.add_argument('--no-apache-conf', action='store_true',
+        help="Do not replace the Apache config. Use if custom apache config will be used")
+                        
+    return vars(parser.parse_args())
+
+def install(opts):
+    logger.info('Installation started')
+
+    # first things first, if the user hasn't supplied a config file, then 
+    # give them one with sane defaults
+    if not os.path.isfile(PORTAL_CONF):
+        logger.warning('no portal config, creating one that might not work')
+        # TODO: get source conf file location
+        shutils.copy(PORTAL_CONF_SRC, PORTAL_CONF)
+
+    # if the user has not explicitly requested, create the apache conf
+    if not ('no-apache-conf' in opts and opts['no-apache-conf'] is True):
+        # TODO: get apache source and definition
+        pass
+
+    # create a /var/lib/freeipa-community-portal, if it does not exist
+    # this is where our databases live
+    if not os.path.exists(VAR_DIR):
+        os.makedirs(VAR_DIR)
+
+def uninstall(opts):
+    pass
+    
+def isUninstall(opts):
+    return 'uninstall' in opts and opts['uninstall'] is True
+
+if __name__ == '__main__':
+    opts = []
+    out = 0
+    openlogs()
+
+    try: 
+        opts = parse_args()
+        logger.setLevel(logging.DEBUG)
+
+        loger.debug('Installation arguments:')
+        for k in sorted(opts.iterkeys()):
+            logger.debug('%s: %s', k, opts[k])
+
+        if isUninstall(opts):
+            uninstall(opts)
+        else:
+            install(opts)
+
+    except Exception as e:
+        logger.exception(e)
+        if isUninstall(opts)
+            logger.info('Uninstallation aborted')
+        else:
+            logger.info('Installation aborted')
+        logger.info('See log file %s for details' % LOGFILE)
+        out = 1
+    except SystemExit:
+        out = 1
+        raise
+    finally:
+        if out == 0:
+            if isUninstall(opts):
+                logger.info('Uninstallation complete')
+            else:
+                logger.info('Installation complete')
+                logger.info('Please restart httpd to enable the portal')
+        sys.exit(out)
