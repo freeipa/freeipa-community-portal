@@ -27,24 +27,27 @@ from jinja2 import Environment, PackageLoader
 
 # development defaults
 defaults = {
-    "Mailers": {
-        "smtp_server": "smtp.corp.redhat.com",
-        "smtp_use_auth": "False",
-        "smtp_username": "",
-        "smtp_password": "",
-        "default_from_email": "derny@redhat.com"
-        "default_admin_email": "derny@redhat.com"
-    }
+    "smtp_server": "smtp.corp.redhat.com",
+    "smtp_use_auth": "False",
+    "smtp_username": "",
+    "smtp_password": "",
+    "default_from_email": "derny@redhat.com",
+    "default_admin_email": "derny@redhat.com"
 }    
 
 # first, read in the configuration file
-Config = ConfigParser.ConfigParser(defaults)
+Config = ConfigParser.ConfigParser()
 # TODO: add the a read from files
 files = Config.read('/etc/freeipa_community_portal.ini')
 
-MAIL_SERVER = Config.get("Mailers","smtp_server")
-DEFAULT_TO = Config.get("Mailers","default_admin_email")
-DEFAULT_FROM = Config.get("Mailers","default_from_email")
+if files:
+    MAIL_SERVER = Config.get("Mailers","smtp_server")
+    DEFAULT_TO = Config.get("Mailers","default_admin_email")
+    DEFAULT_FROM = Config.get("Mailers","default_from_email")
+else:
+    MAIL_SERVER = defaults["smtp_server"]
+    DEFAULT_TO = defaults["default_admin_email"]
+    DEFAULT_FROM = defaults["default_from_email"]
 
 class Mailer(object):
     """ Base class for sending mail """

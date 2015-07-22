@@ -23,6 +23,7 @@ The main web server for the FreeIPA community portal.
 
 import cherrypy
 import jinja2
+import sys
 
 from freeipa_community_portal.mailers.sign_up_mailer import SignUpMailer
 from freeipa_community_portal.mailers.reset_password_mailer import ResetPasswordMailer
@@ -146,38 +147,37 @@ def check_captcha(args):
         return "Incorrect Captcha response"
     else:
         return None
+conf = {
+    '/assets':  {
+        'tools.staticdir.on': True,
+        'tools.staticdir.dir': '%(prefix)s/share/freeipa_community_portal/assets' % sys.prefix
+    },
+    '/user': {
+        'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        'tools.response_headers.on': True,
+        # 'tools.response_headers.headers': [('Content-Type', 'text/plain')]
+    },
+    '/request_reset': {
+        'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        'tools.response_headers.on': True,
+    },
+    '/reset_password': {
+        'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
+        'tools.response_headers.on': True,
+    }
+}
 
-def main():
+def app():
     """Main entry point for the web application. If you run this library as a
     standalone application, you can just use this function
     """
-
-    conf = {
-        '/assets':  {
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': '/home/derny/freeipa/community_portal/freeipa_community_portal/assets'
-        },
-        '/user': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-            'tools.response_headers.on': True,
-            # 'tools.response_headers.headers': [('Content-Type', 'text/plain')]
-        },
-        '/request_reset': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-            'tools.response_headers.on': True,
-        },
-        '/reset_password': {
-            'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
-            'tools.response_headers.on': True,
-        }
-    }
 
     webapp = SelfServicePortal()
     webapp.user = SelfServiceUserRegistration() # pylint: disable=attribute-defined-outside-init
     webapp.request_reset = RequestSelfServicePasswordReset()
     webapp.reset_password = SelfServicePasswordReset()
-    cherrypy.quickstart(webapp, '/', conf)
+    return webapp
 
 if __name__ == "__main__":
-    main()
-
+    webapp = app()
+    cherrypy.quickstart(webapp, '/', conf)
