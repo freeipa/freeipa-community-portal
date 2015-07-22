@@ -18,8 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from setuptools import setup
+from glob import glob
 
-
+DATA = 'share/freeipa_community_portal/'
 
 setup(name='freeipa_community_portal',
       version='0.2',
@@ -31,6 +32,20 @@ setup(name='freeipa_community_portal',
           'freeipa_community_portal',
           'freeipa_community_portal.model',
           'freeipa_community_portal.mailers',
+      ],
+      package_data = {
+          'freeipa_community_portal': ['templates/*.html'],
+          'freeipa_community_portal.mailers': ['templates/*.txt']
+      },
+      data_files = [
+          (DATA+'assets/css', glob('assets/css/*.css')),
+          (DATA+'assets/js', glob('assets/js/*.js')),
+          (DATA+'assets/fonts', glob('assets/fonts/*')),
+          (DATA+'assets/img', glob('assets/img/*')),
+          (DATA+'conf', glob('conf/*')),
+      ],
+      scripts = [
+          'install/freeipa-portal-install',
       ],
       zip_safe=False
       )
