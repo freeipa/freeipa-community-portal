@@ -31,8 +31,14 @@ import os
 from sqlalchemy import Table, Column, MetaData, String, DateTime, create_engine
 from sqlalchemy.sql import select, insert, delete
 
+# retrieve the captcha key from the key file
+# trust me, i know cryptography
+def getKey():
+    with open('/var/lib/freeipa_community_portal/key') as fp:
+        return fp.read()
+
 LENGTH = 4
-KEY = os.urandom(8)
+KEY = getKey()
 
 _engine = create_engine('sqlite:////var/lib/freeipa_community_portal/captcha.db', echo=True)
 _metadata = MetaData()

@@ -40,7 +40,7 @@ setup(name='freeipa_community_portal',
       },
       data_files = [
           # WSGI executable
-          ('libexec', 'freeipa_community_portal/freeipa_community_portal'),
+          ('libexec', ['freeipa_community_portal.wsgi']),
           # asset files
           (DATA+'assets/css', glob('assets/css/*.css')),
           (DATA+'assets/js', glob('assets/js/*.js')),

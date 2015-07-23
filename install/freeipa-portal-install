@@ -6,13 +6,15 @@ import shutil
 import sys
 import argparse
 import socket
+import time
 
 LOGFILE = '/var/log/freeipa-portal-install.log'
-PORTAL_CONF = '/etc/freeipaportal.conf'
+PORTAL_CONF = '/etc/freeipa_community_portal.ini'
 HTTPD_CONF = '/etc/httpd/conf.d/freeipa_community_portal.conf'
 VAR_DIR = '/var/lib/freeipa_community_portal'
 WSGI_DIR = '/var/www/wsgi'
-EXECUTABLE = 'freeipa_community_portal'
+EXECUTABLE = '/freeipa_community_portal.wsgi'
+PORTAL_CONF_SRC = sys.prefix + '/share/freeipa_community_portal/conf/freeipa_community_portal.ini'
 
 logger = logging.getLogger()
 
@@ -71,7 +73,7 @@ def parse_args():
     parser.add_argument('--uninstall', action='store_true',
         help="Uninstall the server and all data")
     parser.add_argument('--no-apache-conf', action='store_true',
-        help="Do not replace the Apache config. Use if custom apache config will be used")
+        help="Do not generate the Apache config. Use if custom apache config will be used")
                         
     return vars(parser.parse_args())
 
@@ -83,29 +85,38 @@ def install(opts):
     if not os.path.isfile(PORTAL_CONF):
         logger.warning('no portal config, creating one that might not work')
         # TODO: get source conf file location
-        shutils.copy(PORTAL_CONF_SRC, PORTAL_CONF)
+        shutil.copy(PORTAL_CONF_SRC, PORTAL_CONF)
 
     # if the user has not explicitly requested, create the apache conf
     if not ('no-apache-conf' in opts and opts['no-apache-conf'] is True):
-        shutils.copy(sys.prefix + 'share/conf/httpd.conf', HTTPD_CONF)
+        logger.warning('generating apache config file!')
+        shutil.copy(sys.prefix + '/share/freeipa_community_portal/conf/httpd.conf', HTTPD_CONF)
 
     # create a /var/lib/freeipa-community-portal, if it does not exist
     # this is where our databases live
     if not os.path.exists(VAR_DIR):
         os.makedirs(VAR_DIR)
 
+    # create a key for the captcha
+    with open(VAR_DIR + '/key', 'w') as fp:
+        logger.info('writing captcha key file')
+        fp.write(os.urandom(8))
+
     # create a directory to store our public scripts.
     if not os.path.exists(WSGI_DIR):
+        logger.info('creating directory for WSGI script')
         os.makedirs(WSGI_DIR)
     # remove a file that already exists, if there is one
-    if os.path.isFile(WSGI_DIR + EXECUTABLE):
+    if os.path.isfile(WSGI_DIR + EXECUTABLE):
         logger.warning('executable already exists, overwriting!')
         os.remove(WSGI_DIR + EXECUTABLE)
     # and then symlink the executable from libexec to the public script dir
-    os.symlink(sys.prefix + 'libexec/' + EXECUTABLE, WSGI_DIR + EXECUTABLE)
+    logger.info('symlinking WSGI executable')
+    os.symlink(sys.prefix + '/libexec' + EXECUTABLE, WSGI_DIR + EXECUTABLE)
 
 def uninstall(opts):
     pass
+    
     
 def isUninstall(opts):
     return 'uninstall' in opts and opts['uninstall'] is True

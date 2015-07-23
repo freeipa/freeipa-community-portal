@@ -44,10 +44,16 @@ if files:
     MAIL_SERVER = Config.get("Mailers","smtp_server")
     DEFAULT_TO = Config.get("Mailers","default_admin_email")
     DEFAULT_FROM = Config.get("Mailers","default_from_email")
+    USE_AUTH = Config.getboolean("Mailers","smtp_use_auth")
+    SMTP_USERNAME = Config.get("Mailers","smtp_username")
+    SMTP_PASSWORD = Config.get("Mailers","smtp_password")
 else:
     MAIL_SERVER = defaults["smtp_server"]
     DEFAULT_TO = defaults["default_admin_email"]
     DEFAULT_FROM = defaults["default_from_email"]
+    USE_AUTH = False
+    SMTP_USERNAME = ""
+    SMTP_PASSWORD = ""
 
 class Mailer(object):
     """ Base class for sending mail """
@@ -81,6 +87,8 @@ class Mailer(object):
         server = smtplib.SMTP(MAIL_SERVER)
         print "server object created"
         server.starttls();
+        if USE_AUTH:
+            server.login(SMTP_USERNAME,SMTP_PASSWORD)
         print "tls started"
         server.sendmail(contents['From'], contents['To'], contents.as_string())
         print "mail sent"

@@ -150,7 +150,7 @@ def check_captcha(args):
 conf = {
     '/assets':  {
         'tools.staticdir.on': True,
-        'tools.staticdir.dir': '%(prefix)s/share/freeipa_community_portal/assets' % sys.prefix
+        'tools.staticdir.dir': '%(prefix)s/share/freeipa_community_portal/assets' % {'prefix': sys.prefix}
     },
     '/user': {
         'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
