@@ -35,13 +35,18 @@ setup(name='freeipa_community_portal',
       ],
       package_data = {
           'freeipa_community_portal': ['templates/*.html'],
+          # TODO: move these somewhere where they can be edited by the user
           'freeipa_community_portal.mailers': ['templates/*.txt']
       },
       data_files = [
+          # WSGI executable
+          ('libexec', 'freeipa_community_portal/freeipa_community_portal'),
+          # asset files
           (DATA+'assets/css', glob('assets/css/*.css')),
           (DATA+'assets/js', glob('assets/js/*.js')),
           (DATA+'assets/fonts', glob('assets/fonts/*')),
           (DATA+'assets/img', glob('assets/img/*')),
+          # configuration files
           (DATA+'conf', glob('conf/*')),
       ],
       scripts = [

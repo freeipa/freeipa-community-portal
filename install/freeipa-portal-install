@@ -9,8 +9,11 @@ import socket
 
 LOGFILE = '/var/log/freeipa-portal-install.log'
 PORTAL_CONF = '/etc/freeipaportal.conf'
-HTTPD_CONF = '/etc/httpd/conf.d'
-VAR_DIR = '/var/lib/freeipa-community-portal'
+HTTPD_CONF = '/etc/httpd/conf.d/freeipa_community_portal.conf'
+VAR_DIR = '/var/lib/freeipa_community_portal'
+WSGI_DIR = '/var/www/wsgi'
+EXECUTABLE = 'freeipa_community_portal'
+
 logger = logging.getLogger()
 
 # borrowing a bunch of code from the ipsilon installer
@@ -84,13 +87,22 @@ def install(opts):
 
     # if the user has not explicitly requested, create the apache conf
     if not ('no-apache-conf' in opts and opts['no-apache-conf'] is True):
-        # TODO: get apache source and definition
-        pass
+        shutils.copy(sys.prefix + 'share/conf/httpd.conf', HTTPD_CONF)
 
     # create a /var/lib/freeipa-community-portal, if it does not exist
     # this is where our databases live
     if not os.path.exists(VAR_DIR):
         os.makedirs(VAR_DIR)
+
+    # create a directory to store our public scripts.
+    if not os.path.exists(WSGI_DIR):
+        os.makedirs(WSGI_DIR)
+    # remove a file that already exists, if there is one
+    if os.path.isFile(WSGI_DIR + EXECUTABLE):
+        logger.warning('executable already exists, overwriting!')
+        os.remove(WSGI_DIR + EXECUTABLE)
+    # and then symlink the executable from libexec to the public script dir
+    os.symlink(sys.prefix + 'libexec/' + EXECUTABLE, WSGI_DIR + EXECUTABLE)
 
 def uninstall(opts):
     pass
@@ -107,7 +119,7 @@ if __name__ == '__main__':
         opts = parse_args()
         logger.setLevel(logging.DEBUG)
 
-        loger.debug('Installation arguments:')
+        logger.debug('Installation arguments:')
         for k in sorted(opts.iterkeys()):
             logger.debug('%s: %s', k, opts[k])
 
@@ -118,7 +130,7 @@ if __name__ == '__main__':
 
     except Exception as e:
         logger.exception(e)
-        if isUninstall(opts)
+        if isUninstall(opts):
             logger.info('Uninstallation aborted')
         else:
             logger.info('Installation aborted')
