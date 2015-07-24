@@ -7,6 +7,7 @@ import sys
 import argparse
 import socket
 import time
+import subprocess
 
 LOGFILE = '/var/log/freeipa-portal-install.log'
 PORTAL_CONF = '/etc/freeipa_community_portal.ini'
@@ -97,10 +98,20 @@ def install(opts):
     if not os.path.exists(VAR_DIR):
         os.makedirs(VAR_DIR)
 
+    # create the database files, if they do not exist
+    for db in (VAR_DIR + '/resets.db', VAR_DIR + '/captcha.db'):
+        if not os.path.exists(db):
+            open(db, 'a').close()
+            subprocess.call(["chown", "apache:apache", db])
+
     # create a key for the captcha
     with open(VAR_DIR + '/key', 'w') as fp:
         logger.info('writing captcha key file')
         fp.write(os.urandom(8))
+
+    # set httpd_can_sendmail to true so that we send mail instead of crashing
+    # logger.info('setting httpd_can_sendmail SELinux bool')
+    # subprocess.call(['setsebool', 'httpd_can_sendmail', 'on'])
 
     # create a directory to store our public scripts.
     if not os.path.exists(WSGI_DIR):
@@ -115,7 +126,34 @@ def install(opts):
     os.symlink(sys.prefix + '/libexec' + EXECUTABLE, WSGI_DIR + EXECUTABLE)
 
 def uninstall(opts):
-    pass
+    logger.info('Uninstallation started')
+
+    # remove the portal config
+    if os.path.isfile(PORTAL_CONF):
+        logger.info('deleting portal config ' + PORTAL_CONF)
+        # TODO: get source conf file location
+        os.remove(PORTAL_CONF)
+
+    # delete the apache config
+    logger.info('deleting HTTPD config')
+    if os.path.isfile(HTTPD_CONF):
+        os.remove(HTTPD_CONF)
+
+    # delete /var/lib/freeipa-community-portal and everything in it
+    # this is where our databases and key lived
+    logger.info('deleting ' + VAR_DIR)
+    if os.path.exists(VAR_DIR):
+        shutil.rmtree(VAR_DIR)
+
+    # set httpd_can_sendmail to true so that we send mail instead of crashing
+    # logger.info('setting httpd_can_sendmail SELinux bool')
+    # subprocess.call(['setsebool', 'httpd_can_sendmail', 'on'])
+
+    # remove the wsgi script, if it exists. 
+    # leave the wsgi directory. idk it feels like something else might use that
+    if os.path.isfile(WSGI_DIR + EXECUTABLE):
+        logger.info('deleting wsgi symlink')
+        os.remove(WSGI_DIR + EXECUTABLE)
     
     
 def isUninstall(opts):
