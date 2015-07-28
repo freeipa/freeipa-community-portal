@@ -63,6 +63,7 @@ def openlogs():
     # TODO: do we need cherrypy here?
 
 def create_ipa_user():
+    pass
     # subprocess.call('ipa privilege-add \'Portal privileges\' --desc=\'Portal privileges\'')
     # ipa privilege-add 'Portal management' --desc='Portal management'
     # ipa privilege-add-permission 'Portal management'
@@ -123,9 +124,9 @@ def install(opts):
         logger.info('writing captcha key file')
         fp.write(os.urandom(8))
 
-    # set httpd_can_sendmail to true so that we send mail instead of crashing
-    # logger.info('setting httpd_can_sendmail SELinux bool')
-    # subprocess.call(['setsebool', 'httpd_can_sendmail', 'on'])
+    # set httpd_can_sendmail so that we send mail instead of crashing
+    logger.info('setting httpd_can_sendmail SELinux bool')
+    subprocess.call(['setsebool', '-P',  'httpd_can_sendmail', 'on'])
 
     # create a directory to store our public scripts.
     if not os.path.exists(WSGI_DIR):
@@ -160,6 +161,7 @@ def uninstall(opts):
         shutil.rmtree(VAR_DIR)
 
     # set httpd_can_sendmail to true so that we send mail instead of crashing
+    # TODO: what if the user uses this bool for something different after?
     # logger.info('setting httpd_can_sendmail SELinux bool')
     # subprocess.call(['setsebool', 'httpd_can_sendmail', 'on'])
 
