@@ -40,7 +40,7 @@ def getKey():
 LENGTH = 4
 KEY = getKey()
 
-_engine = create_engine('sqlite:////var/lib/freeipa_community_portal/captcha.db', echo=True)
+_engine = create_engine('sqlite:////var/lib/freeipa_community_portal/captcha.db')
 _metadata = MetaData()
 _captcha = Table('captcha', _metadata,
     Column('hmac', String, primary_key=True),

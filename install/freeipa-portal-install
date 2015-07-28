@@ -9,6 +9,8 @@ import socket
 import time
 import subprocess
 
+from ipalib import api
+
 LOGFILE = '/var/log/freeipa-portal-install.log'
 PORTAL_CONF = '/etc/freeipa_community_portal.ini'
 HTTPD_CONF = '/etc/httpd/conf.d/freeipa_community_portal.conf'
@@ -60,9 +62,21 @@ def openlogs():
     logger.addHandler(ch)
     # TODO: do we need cherrypy here?
 
-def make_apache_conf():
-    """ builds an apache config that might work. not yet implemented """
-    pass
+def create_ipa_user():
+    # subprocess.call('ipa privilege-add \'Portal privileges\' --desc=\'Portal privileges\'')
+    # ipa privilege-add 'Portal management' --desc='Portal management'
+    # ipa privilege-add-permission 'Portal management'
+    #       --permission='System: Add Users'
+    #       --permission='System: Change User password'
+    #       --permission='System: Read UPG Definition'
+    #       --permission='System: Add User to default group'
+    # ipa role-add 'Portal' --desc="self-service portals"
+    # ipa role-add-privilege 'Portal' --privilege='Portal management'
+    # ipa useradd --first='Self' --last="Service" portal
+    # ipa role-add-member --users=portal 'Portal'
+    # ipa-getkeytab -s cypher.derny.test -p portal@DERNY.TEST -k /etc/ipa/ipa-rest.keytab
+    # add permissions System: Add Users, System: Change User password
+    
 
 def parse_args():
     """parses the command line arguments passed in

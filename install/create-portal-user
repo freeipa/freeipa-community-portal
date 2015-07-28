@@ -1,0 +1,12 @@
+ipa privilege-add 'Portal management privilege' --desc'Portal privileges'
+ipa privilege-add-permission 'Portal management privilege' \
+    --permission='System: Add Users'
+    --permission='System: Read UPG Definition'
+    --permission='System: Add User to default group'
+    --permission='System: Change User password'
+ipa role-add 'Portal management' --desc="self-service portals"
+ipa role-add-privilege 'Portal management' --privilege='Portal management privilege'
+ipa useradd --first='Self' --last="Service" portal
+ipa role-add-member --users=portal 'Portal management'
+
+ipa-getkeytab -s $IPA_SERVER_NAME -p portal -k /etc/ipa/ipa-rest.keytab
