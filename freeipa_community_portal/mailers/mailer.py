@@ -42,6 +42,7 @@ files = Config.read('/etc/freeipa_community_portal.ini')
 
 if files:
     MAIL_SERVER = Config.get("Mailers","smtp_server")
+    SMTP_PORT = Config.getint("Mailers","smtp_port")
     DEFAULT_TO = Config.get("Mailers","default_admin_email")
     DEFAULT_FROM = Config.get("Mailers","default_from_email")
     USE_AUTH = Config.getboolean("Mailers","smtp_use_auth")
@@ -49,6 +50,7 @@ if files:
     SMTP_PASSWORD = Config.get("Mailers","smtp_password")
 else:
     MAIL_SERVER = defaults["smtp_server"]
+    SMTP_PORT = 25
     DEFAULT_TO = defaults["default_admin_email"]
     DEFAULT_FROM = defaults["default_from_email"]
     USE_AUTH = False
@@ -84,12 +86,13 @@ class Mailer(object):
         return msg
 
     def _send(self, contents):
-        server = smtplib.SMTP(MAIL_SERVER)
-        print "server object created"
+        # The print statements in this function are useful for debugging
+        server = smtplib.SMTP(MAIL_SERVER, SMTP_PORT)
+        # print "server object created"
         server.starttls();
         if USE_AUTH:
             server.login(SMTP_USERNAME,SMTP_PASSWORD)
-        print "tls started"
+        # print "tls started"
         server.sendmail(contents['From'], contents['To'], contents.as_string())
-        print "mail sent"
-        print contents
+        # print "mail sent"
+        # print contents
