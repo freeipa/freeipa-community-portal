@@ -112,7 +112,7 @@ def install(opts):
     # this is where our databases live
     if not os.path.exists(VAR_DIR):
         os.makedirs(VAR_DIR)
-        subprocess.call(["chown", "apache:apache", db])
+        subprocess.call(["chown", "apache:apache", VAR_DIR])
 
     # create the database files, if they do not exist
     # for db in (VAR_DIR + '/resets.db', VAR_DIR + '/captcha.db'):

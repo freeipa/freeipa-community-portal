@@ -10,3 +10,8 @@ ipa role-add 'Portal management' --desc="self-service portals"
 ipa role-add-privilege 'Portal management' --privilege='Portal management privilege'
 ipa user-add --first='Self' --last="Service" portal
 ipa role-add-member --users=portal 'Portal management'
+
+
+# ipa-getkeytab -s cypher.derny.test -p portal@DERNY.TEST -k /etc/ipa/portal.keytab
+# chown apache:apache /etc/ipa/portal.keytab
+# su -s /bin/sh apache -c "k5start portal"
