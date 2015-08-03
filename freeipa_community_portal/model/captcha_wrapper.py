@@ -66,7 +66,7 @@ class CaptchaHelper(object):
         """create a new captcha """
         # generate a captcha solution, which consists of 4 letter and digits
         self.solution = u''.join(random.SystemRandom().choice(
-            string.ascii_uppercase + string.digits) for _ in range(LENGTH)
+            (string.ascii_uppercase + string.digits).translate(None, '0OQ')) for _ in range(LENGTH)
         )
 
         # generate the captcha image, hold it as bytes
