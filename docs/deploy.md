@@ -11,35 +11,36 @@ behavior is untested and unproven, so your mileage may vary.
 The community portal has several dependencies which must be installed. Below
 is a list of commands to install these dependencies, and a rationale for each
 
+First, we install the web server. Obviously.
+
     dnf install httpd mod_wsgi
-
-Web server. Obviously.
-
-    dnf install git 
 
 This guide installs a couple of python packages from git, so we need this tool,
 if you don't already have it
 
-    dnf install python-pillow
+    dnf install git 
 
 The CAPTCHA functionality relies on the Pillow library.
 
-    dnf install cherrypy jinja2 sqlalchemy
+    dnf install python-pillow
 
 These components are the core application. CherryPy as the web framework, 
 Jinja2 provides templating, and SQLAlchemy is used for the databases
 
-    pip install git+https://github.com/dperny/captcha.git
+    dnf install cherrypy jinja2 sqlalchemy
 
 Here, we switch to using pip. We install captcha from github, because we rely
 on features not present in the Pypi repository. Eventually, we won't need this.
 
-    pip install git+https://github.com/dperny/freeipa-communityportal.git
+    pip install git+https://github.com/dperny/captcha.git
 
-Finally, the portal itself! This will automatically unpack a couple of things 
-to a couple of places that we need them. Of note is that it unpacks 
-freeipa_community_portal.wsgi, which unpacks to <python_path>/libexec/, and
-which is an executable, WSGI-compatible script.
+Finally, the portal itself! 
+
+    pip install git+https://github.com/freeipa/freeipa-community-portal.git
+
+This will automatically unpack a couple of things to the places that we need 
+them. Of note is that it unpacks freeipa_community_portal.wsgi, which unpacks 
+to <python_path>/libexec/, and which is an executable, WSGI-compatible script.
 
 ### Installation
 
