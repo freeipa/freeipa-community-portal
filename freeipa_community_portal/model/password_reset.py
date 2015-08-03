@@ -24,9 +24,16 @@ import base64
 from sqlalchemy import Table, Column, MetaData, String, DateTime, create_engine
 from sqlalchemy.sql import select, insert, delete
 
+import ConfigParser
+
 from ipalib import api, errors
 
-_engine = create_engine('sqlite:////var/lib/freeipa_community_portal/resets.db')
+Config = ConfigParser.ConfigParser()
+Config.read(['/etc/freeipa_community_portal.ini', 'conf/freeipa_community_portal_dev.ini'])
+
+DATABASE_LOCATION = Config.get('Database', 'db_directory') + 'resets.db'
+
+_engine = create_engine('sqlite:///' + DATABASE_LOCATION)
 
 _metadata = MetaData()
 _password_reset = Table('password_reset', _metadata,

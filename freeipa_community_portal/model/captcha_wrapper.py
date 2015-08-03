@@ -31,16 +31,26 @@ import os
 from sqlalchemy import Table, Column, MetaData, String, DateTime, create_engine
 from sqlalchemy.sql import select, insert, delete
 
+import ConfigParser
+
+Config = ConfigParser.ConfigParser()
+Config.read(['/etc/freeipa_community_portal.ini', 'conf/freeipa_community_portal_dev.ini'])
+
+KEY_LOCATION = Config.get('Captcha','key_location')
+DATABASE_LOCATION = Config.get('Database', 'db_directory') + 'captcha.db'
+
+print DATABASE_LOCATION
+
 # retrieve the captcha key from the key file
 # trust me, i know cryptography
 def getKey():
-    with open('/var/lib/freeipa_community_portal/key') as fp:
+    with open(KEY_LOCATION) as fp:
         return fp.read()
 
 LENGTH = 4
 KEY = getKey()
 
-_engine = create_engine('sqlite:////var/lib/freeipa_community_portal/captcha.db')
+_engine = create_engine('sqlite:///' + DATABASE_LOCATION)
 _metadata = MetaData()
 _captcha = Table('captcha', _metadata,
     Column('hmac', String, primary_key=True),
