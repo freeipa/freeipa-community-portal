@@ -1,4 +1,4 @@
-# Deploying the Community Portal
+## Deploying the Community Portal
 
 The FreeIPA Community Portal is a stand-alone WSGI web application, built with 
 CherryPy. It is intended to be deployed on its own server, using the provided
@@ -6,25 +6,25 @@ installation script. However, it can probably be deployed alongside other
 Apache applications, and possibly even another FreeIPA server, if desired. This
 behavior is untested and unproven, so your mileage may vary.
 
-## Requirement
+### Requirement
 
 The community portal has several dependencies which must be installed. Below
 is a list of commands to install these dependencies, and a rationale for each
 
-    yum install httpd mod_wsgi
+    dnf install httpd mod_wsgi
 
 Web server. Obviously.
 
-    yum install git 
+    dnf install git 
 
 This guide installs a couple of python packages from git, so we need this tool,
 if you don't already have it
 
-    yum install python-pillow
+    dnf install python-pillow
 
 The CAPTCHA functionality relies on the Pillow library.
 
-    yum install cherrypy jinja2 sqlalchemy
+    dnf install cherrypy jinja2 sqlalchemy
 
 These components are the core application. CherryPy as the web framework, 
 Jinja2 provides templating, and SQLAlchemy is used for the databases
@@ -41,7 +41,7 @@ to a couple of places that we need them. Of note is that it unpacks
 freeipa_community_portal.wsgi, which unpacks to <python_path>/libexec/, and
 which is an executable, WSGI-compatible script.
 
-## Installation
+### Installation
 
 The reccommended installation method is to use the freeipa-portal-install 
 command, which will perform most installation actions automatically. If you're
@@ -55,6 +55,9 @@ searches for the config, which is mostly used for email settings. If it is not
 present or formatted correctly, the portal will crash on start. Even if you're
 not using the install, I recommend copying this file over, instead of typing
 it from scratch, to avoid errors.
+
+You must edit this configuration file in order for the application to work 
+properly. If the email settings are misconfigured, the application will crash.
 
 Next, the installer copies the apache config from the conf directory to 
 /etc/httpd/conf.d/freeipa_community_portal.conf. If you're doing a custom 
@@ -88,6 +91,30 @@ executable into this directory, so,
 
 This is the expected location of the WSGI file according to the provided httpd
 conf file. Is this best practice? I have no idea. Probably not. I'm not very
-good at Apache.
+good at Apache. If you choose to install it somewhere different, just make sure
+that change is reflected in your Apache configuration file.
 
-## Post-installation
+### Post-installation
+
+After installation, the application still needs a few things set up in order to
+run. The first is a user account on the FreeIPA to run commands as. The portal
+relies on a few permissions:
+
+- System: Add Users
+- System: Read UPG Definition
+- System: Add User to default group
+- System: Change User Password
+
+You can create an account manually with these permissions, or you can use the
+included "create-portal-user" script, which contains all of the commands to 
+add a user called "portal" with the requisite permissions.
+
+The second thing needed is a way to authenticate via Kerberos as the user 
+created in the previous step. There's no canonical solution for this yet, but 
+what should work is creating a keytab for the portal user, and then setting up
+cron to run k5start on reboot to keep the portal authenticated while the server
+is up. 
+
+After all this, you should probably set up and configure mod_ssl and put the 
+app behind HTTPS, but that is outside of the scope of this guide. 
+
