@@ -21,6 +21,18 @@ You can configure exactly where the application spews its files by editing the
 freeipa_community_portal_dev.ini file and plugging in values that make you 
 happy.
 
+Before you run the app, even in tree, you should kinit as a user with 
+sufficient permissions as outlined in the deployment doc.
+
 To run the application in-tree, do
 
     python freeipa_community_portal/app.py
+
+If you're running an IPA server on the host you're doing development on, one of
+the IPA apps already uses port 8080 (the default CherryPy port). You may need
+to add
+
+    cherrypy.config.update({"server.socket_port": 8099})
+
+to app.py between lines 182 and 183. You can use any port that isn't being 
+used be default, not just 8099.

@@ -60,7 +60,6 @@ def openlogs():
     ch.setFormatter(formatter)
     ch.setLevel(logging.INFO)
     logger.addHandler(ch)
-    # TODO: do we need cherrypy here?
 
 def create_ipa_user():
     pass
@@ -100,7 +99,6 @@ def install(opts):
     # give them one with sane defaults
     if not os.path.isfile(PORTAL_CONF):
         logger.warning('no portal config, creating one that might not work')
-        # TODO: get source conf file location
         shutil.copy(PORTAL_CONF_SRC, PORTAL_CONF)
 
     # if the user has not explicitly requested, create the apache conf
@@ -112,13 +110,8 @@ def install(opts):
     # this is where our databases live
     if not os.path.exists(VAR_DIR):
         os.makedirs(VAR_DIR)
+        # give apache this directory, so apache can write to it.
         subprocess.call(["chown", "apache:apache", VAR_DIR])
-
-    # create the database files, if they do not exist
-    # for db in (VAR_DIR + '/resets.db', VAR_DIR + '/captcha.db'):
-        # if not os.path.exists(db):
-            # open(db, 'a').close()
-            # subprocess.call(["chown", "apache:apache", db])
 
     # create a key for the captcha
     with open(VAR_DIR + '/key', 'w') as fp:
@@ -163,6 +156,7 @@ def uninstall(opts):
 
     # set httpd_can_sendmail to true so that we send mail instead of crashing
     # TODO: what if the user uses this bool for something different after?
+    # just leave it set for now
     # logger.info('setting httpd_can_sendmail SELinux bool')
     # subprocess.call(['setsebool', 'httpd_can_sendmail', 'on'])
 
@@ -174,6 +168,7 @@ def uninstall(opts):
     
     
 def isUninstall(opts):
+    """ returns true if --uninstall is in the options """
     return 'uninstall' in opts and opts['uninstall'] is True
 
 if __name__ == '__main__':

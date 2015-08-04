@@ -55,9 +55,7 @@ class Mailer(object):
     def __init__(self):
         self.subject = "FreeIPA Community Portal: Notice"
         self.template = 'default.txt'
-        # TODO: fix this
         self.to = DEFAULT_TO
-        # TODO: fix this
         self.frm = DEFAULT_FROM
         self.template_opts = {}
 
@@ -68,7 +66,6 @@ class Mailer(object):
 
     def _build(self, template, template_opts):
         msg = MIMEMultipart()
-        # TODO: change this to be configurable
         msg['From'] = self.frm
         msg['To'] = self.to
         msg['Subject'] = self.subject
