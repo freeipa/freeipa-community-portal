@@ -1,4 +1,5 @@
-## Deploying the Community Portal
+Deploying the Community Portal
+==============================
 
 The FreeIPA Community Portal is a stand-alone WSGI web application, built with 
 CherryPy. It is intended to be deployed on its own server, using the provided
@@ -6,35 +7,36 @@ installation script. However, it can probably be deployed alongside other
 Apache applications, and possibly even another FreeIPA server, if desired. This
 behavior is untested and unproven, so your mileage may vary.
 
-### Requirement
+Requirement
+-----------
 
 The community portal has several dependencies which must be installed. Below
-is a list of commands to install these dependencies, and a rationale for each
+is a list of commands to install these dependencies, and a rationale for each.
 
-First, we install the web server. Obviously.
+First, we install the web server. Obviously::
 
     dnf install httpd mod_wsgi
 
 This guide installs a couple of python packages from git, so we need this tool,
-if you don't already have it
+if you don't already have it::
 
     dnf install git 
 
-The CAPTCHA functionality relies on the Pillow library.
+The CAPTCHA functionality relies on the Pillow library::
 
     dnf install python-pillow
 
 These components are the core application. CherryPy as the web framework, 
-Jinja2 provides templating, and SQLAlchemy is used for the databases
+Jinja2 provides templating, and SQLAlchemy is used for the databases::
 
     dnf install cherrypy jinja2 sqlalchemy
 
 Here, we switch to using pip. We install captcha from github, because we rely
-on features not present in the Pypi repository. Eventually, we won't need this.
+on features not present in the Pypi repository. Eventually, we won't need this::
 
     pip install git+https://github.com/dperny/captcha.git
 
-Finally, the portal itself! 
+Finally, the portal itself::
 
     pip install git+https://github.com/freeipa/freeipa-community-portal.git
 
@@ -42,7 +44,8 @@ This will automatically unpack a couple of things to the places that we need
 them. Of note is that it unpacks freeipa_community_portal.wsgi, which unpacks 
 to <python_path>/libexec/, and which is an executable, WSGI-compatible script.
 
-### Installation
+Installation
+------------
 
 The reccommended installation method is to use the freeipa-portal-install 
 command, which will perform most installation actions automatically. If you're
@@ -65,7 +68,7 @@ Next, the installer copies the apache config from the conf directory to
 installation of the portal, you probably will not need this file, because you
 probably know what you're doing.
 
-Then, the installer creates the directory where the portal keeps its databases.
+Then, the installer creates the directory where the portal keeps its databases::
 
     mkdir -p  /var/lib/freeipa_community_portal
     chown apache:apache /var/lib/freeipa_community_portal/
@@ -76,7 +79,7 @@ file called "key" the above directory. The portal uses this key to secure the
 captcha. It would be mostly harmless if this key gets compromised, so there's 
 no need to take any special precautions to secure it.
 
-After this, the installer does
+After this, the installer does::
 
     setsebool -P httpd_can_sendmail on
 
@@ -84,7 +87,7 @@ which loosens SELinux security so that the portal can send mail. Without this,
 the portal will crash when it attempts to send mail.
 
 Finally, the portal creates a directory, /var/www/wsgi, and symlinks the wsgi
-executable into this directory, so,
+executable into this directory, so::
 
     mkdir -P /var/www/wsgi
     ln -s /usr/libexec/freeipa_community_portal.wsgi \
@@ -95,7 +98,8 @@ conf file. Is this best practice? I have no idea. Probably not. I'm not very
 good at Apache. If you choose to install it somewhere different, just make sure
 that change is reflected in your Apache configuration file.
 
-### Post-installation
+Post-installation
+-----------------
 
 After installation, the application still needs a few things set up in order to
 run. The first is a user account on the FreeIPA to run commands as. The portal
@@ -111,10 +115,15 @@ included "create-portal-user" script, which contains all of the commands to
 add a user called "portal" with the requisite permissions.
 
 The second thing needed is a way to authenticate via Kerberos as the user 
-created in the previous step. There's no canonical solution for this yet, but 
-what should work is creating a keytab for the portal user, and then setting up
-cron to run k5start on reboot to keep the portal authenticated while the server
-is up. 
+created in the previous step. Specifically, we need to authenticate as a user 
+principal, and not a service principal. There's no canonical solution for this 
+yet, but what should work is creating a keytab for the portal user, and then 
+setting up cron to run k5start on reboot to keep the portal authenticated while 
+the server is up. When testing deployment, I tend to do something like:: 
+
+    su -s /bin/sh apache -c 'kinit portal'
+
+but this method requires manual intervention. 
 
 After all this, you should probably set up and configure mod_ssl and put the 
 app behind HTTPS, but that is outside of the scope of this guide. 

@@ -1,6 +1,8 @@
-= The CAPTCHA =
+The CAPTCHA
+===========
 
-== Overview == 
+Overview
+--------
 
 Several forms on the Community Portal site have the potential for abuse. A
 warped-characters captcha forms the first line of defense against automated
@@ -9,14 +11,16 @@ adversary, the captcha will deter untargeted, drive-by spam and casual
 targetted attacks.
 
 
-== Use Cases ==
+Use Cases
+---------
 
 A captcha is present on each form with the potential for abuse, namely the
 self-service user registration form and the password reset initiation form. The
 password reset completion form is probably not susceptible to abuse and does
 not need a captcha.
 
-== Design ==
+Design
+------
 
 1.) The user requests a form protected with a captcha. 
 
@@ -43,7 +47,8 @@ database, the user is returned to the form and informed that their captcha
 solution is incorrect. If the captcha is correct, processing of form data
 begins and the rest of the form's workflow is carried out.
 
-== Implementation == 
+Implementation
+--------------
 
 The captcha system depends on a python library called captcha, which does not
 current appear to be available in the Fedora package repos, but is available
@@ -52,11 +57,13 @@ through pip.
 Old captcha data will be periodically expired and deleted from the database
 with a script run regularly by cron. 
 
-== Feature Management ==
+Feature Management
+------------------
 
 The secret key for the HMAC is currently hard-coded into the program, but will
 be read from a configuration file in the future. 
 
-== How to Test ==
+How to Test
+-----------
 
 Automated unit tests will be written. 

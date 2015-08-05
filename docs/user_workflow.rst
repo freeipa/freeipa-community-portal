@@ -1,4 +1,5 @@
-# FreeIPA Community Portal #
+FreeIPA Community Portal
+========================
 
 The FreeIPA Community Portal is a web frontend for FreeIPA that allows
 anonymous users to interact with FreeIPA without authenticating. It is designed
@@ -10,7 +11,8 @@ Currently, the FreeIPA Community Portal has two features: self-service
 registration, and self-service password reset. Both of these features
 previously required emailing an administrator.
 
-## Self-Service User Registration ##
+Self-Service User Registration
+------------------------------
 
 The self-service registration workflow is very simple. The user is presented a
 form into which they can enter basic biographical information, i.e. name, email
@@ -26,7 +28,8 @@ All other portions of the workflow (user's first sign in, sign up approval,
 etc.) take place inside the existing IPA WebUI and are outside of the scope of
 this application.
 
-## Self-Service Password Reset ##
+Self-Service Password Reset
+---------------------------
 
 The self-service password reset workflow is marginally more complicated. It
 consists of two main portions.
@@ -60,7 +63,8 @@ expired and they must restart the process. The user is not informed what
 specific error has occurred, to avoid using the password reset feature to probe
 for the existance of usernames. 
 
-## More Information ##
+More Information
+----------------
 
 A more technical guide to the workings of the Community Portal can be found at
 these pages:
