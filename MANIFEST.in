@@ -1,6 +1,8 @@
 include COPYING
 include README
 include freeipa_community_portal.wsgi
+include tox.ini
+include requirements.txt
 
 recursive-include docs *
 prune docs/build

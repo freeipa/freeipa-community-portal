@@ -1,0 +1,6 @@
+Pillow
+cherrypy
+jinja2
+sqlalchemy
+git+https://github.com/dperny/captcha.git
+

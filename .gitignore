@@ -1,5 +1,6 @@
 # compiled python modules
 *.pyc
+__pycache__
 
 # Setuptools distribution folder
 /dist/
@@ -9,3 +10,9 @@
 
 # Sphinx builds
 /docs/build
+
+# testing infrastrucutre
+/.tox
+/resets.db
+/captcha.db
+/key
