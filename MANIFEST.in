@@ -1,0 +1,17 @@
+include COPYING
+include README
+include freeipa_community_portal.wsgi
+
+recursive-include docs *
+prune docs/build
+
+recursive-include tests *.py
+
+include conf/*.conf
+include conf/*.ini
+include install/create-portal-user
+include install/freeipa-portal-install
+recursive-include assets *.css *.eot *.gif *.png *.svg *.ttf *.woff
+
+include freeipa_community_portal/templates/*.html
+include freeipa_community_portal/mailers/templates/*.txt
