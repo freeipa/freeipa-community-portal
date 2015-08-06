@@ -28,6 +28,7 @@ setup(name='freeipa_community_portal',
       author='Drew Erny',
       author_email='derny@redhat.com',
       license='GPLv3',
+      url='http://www.freeipa.org',
       packages=[
           'freeipa_community_portal',
           'freeipa_community_portal.model',
