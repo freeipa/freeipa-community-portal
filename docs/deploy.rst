@@ -29,7 +29,7 @@ The CAPTCHA functionality relies on the Pillow library::
 These components are the core application. CherryPy as the web framework, 
 Jinja2 provides templating, and SQLAlchemy is used for the databases::
 
-    dnf install cherrypy jinja2 sqlalchemy
+    dnf install python-cherrypy python-jinja2 python-sqlalchemy
 
 Here, we switch to using pip. We install captcha from github, because we rely
 on features not present in the Pypi repository. Eventually, we won't need this::
@@ -47,7 +47,7 @@ to <python_path>/libexec/, and which is an executable, WSGI-compatible script.
 Installation
 ------------
 
-The reccommended installation method is to use the freeipa-portal-install 
+The recommended installation method is to use the freeipa-portal-install
 command, which will perform most installation actions automatically. If you're
 using this script, you can skip this section and jump to the next thing, which
 outlines some post-install necessities
