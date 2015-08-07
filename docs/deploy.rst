@@ -52,6 +52,13 @@ This will automatically unpack a couple of things to the places that we need
 them. Of note is that it unpacks freeipa_community_portal.wsgi, which unpacks 
 to <python_path>/libexec/, and which is an executable, WSGI-compatible script.
 
+Before continuing into the installation, the server should be enrolled as a 
+FreeIPA client of the FreeIPA domain it belongs to. Running::
+
+    freeipa-client-install
+
+with your favorite options will do.
+
 Installation
 ------------
 
