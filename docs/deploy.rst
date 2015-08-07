@@ -17,6 +17,14 @@ First, we install the web server. Obviously::
 
     dnf install httpd mod_wsgi
 
+The web server also needs to be an IPA client. In addition, having the admin
+tools makes the installation easier. If you're trying to minimize the the number
+of installeded programs on your server, you can run the ipa commands from a 
+different computer and skip installing freeipa-admintools. Also, due to a
+deficiency in FreeIPA, the client currently depends on python-memcached::
+
+    dnf install freeipa-client freeipa-admintools python-memcached
+
 This guide installs a couple of python packages from git, so we need this tool,
 if you don't already have it::
 
