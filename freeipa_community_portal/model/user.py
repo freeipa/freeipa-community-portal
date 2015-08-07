@@ -62,7 +62,7 @@ class User(object): # pylint: disable=too-few-public-methods
         """
         api_connect()
 
-        api.Command.user_add( # pylint: disable=no-member
+        api.Command.stageuser_add( # pylint: disable=no-member
             givenname=self.given_name,
             sn=self.family_name,
             uid=self.username,
