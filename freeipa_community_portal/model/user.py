@@ -18,7 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """ User model """
+from . import api_connect
+
 from ipalib import api, errors
+
 
 class User(object): # pylint: disable=too-few-public-methods
     """ User model
@@ -57,8 +60,7 @@ class User(object): # pylint: disable=too-few-public-methods
     def _call_api(self):
         """performs the actual API call. seperate method for testing purposes
         """
-        if not api.Backend.rpcclient.isconnected():
-            api.Backend.rpcclient.connect()
+        api_connect()
 
         api.Command.user_add( # pylint: disable=no-member
             givenname=self.given_name,

@@ -28,6 +28,9 @@ import ConfigParser
 
 from ipalib import api, errors
 
+from . import api_connect
+
+
 Config = ConfigParser.ConfigParser()
 Config.read(['/etc/freeipa_community_portal.ini', 'conf/freeipa_community_portal_dev.ini'])
 
@@ -110,9 +113,9 @@ class PasswordReset(object):
         if self._valid is not None:
             return self._valid
 
+        api_connect()
+
         try:
-            if not api.Backend.rpcclient.isconnected():
-                api.Backend.rpcclient.connect()
             response = api.Command.user_show(uid=self.username)
         except errors.NotFound:
             self._valid = False
@@ -131,8 +134,7 @@ class PasswordReset(object):
     def reset_password(self):
         """Calls the IPA API and sets the password to a new, random value"""
         newpass = base64.urlsafe_b64encode(os.urandom(8)).rstrip('=')
-        if not api.Backend.rpcclient.isconnected():
-            api.Backend.rpcclient.connect()
+        api_connect()
         api.Command.passwd(self.username, password=unicode(newpass))
         return newpass
 

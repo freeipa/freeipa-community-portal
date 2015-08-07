@@ -25,6 +25,15 @@ ipalib. they should be the sole holders of the ipalib dependency
 """
 from ipalib import api
 
-api.bootstrap(context='cli')
-api.finalize()
-api.Backend.rpcclient.connect() # pylint: disable=no-member
+
+def api_connect():
+    """Initialize and connect to FreeIPA's RPC server.
+    """
+    # delay initialization of API for pre-forking web servers
+    if not api.isdone('bootstrap'):
+        api.bootstrap(context='cli')
+        api.finalize()
+
+    if not api.Backend.rpcclient.isconnected():
+        api.Backend.rpcclient.connect()
+
