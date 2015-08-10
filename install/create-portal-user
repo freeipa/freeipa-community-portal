@@ -2,10 +2,11 @@
 
 ipa privilege-add 'Portal management privilege' --desc='Portal privileges'
 ipa privilege-add-permission 'Portal management privilege' \
-    --permission='System: Add Users' \
-    --permission='System: Read UPG Definition' \
-    --permission='System: Add User to default group' \
-    --permission='System: Change User password' 
+    --permission='System: Add Stage User' \
+    --permission='System: Read Stage User' \
+    --permission='System: Change User password' \
+    --permission='System: Read User Standard Attributes' \
+    --permission='System: Read User Addressbook Attributes'
 ipa role-add 'Portal management' --desc="self-service portals"
 ipa role-add-privilege 'Portal management' --privilege='Portal management privilege'
 ipa user-add --first='Self' --last="Service" portal

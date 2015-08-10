@@ -120,10 +120,21 @@ After installation, the application still needs a few things set up in order to
 run. The first is a user account on the FreeIPA to run commands as. The portal
 relies on a few permissions:
 
-- System: Add Users
-- System: Read UPG Definition
-- System: Add User to default group
-- System: Change User Password
+**System: Add Stage User**
+  to create a new stage user
+
+**System: Read Stage User**
+  to query the newly created stage user
+
+**System: Change User Password**
+  to set a temporary password for the password reset feature
+
+**System: Read User Standard Attributes**
+  to query user by uid for password reset (usually available to anyone)
+
+**System: Read User Addressbook Attributes**
+  to read the mail attribute to send the password reset mail (usually
+  available to all authenticated users)
 
 You can create an account manually with these permissions, or you can use the
 included "create-portal-user" script, which contains all of the commands to 
@@ -134,7 +145,12 @@ created in the previous step. Specifically, we need to authenticate as a user
 principal, and not a service principal. There's no canonical solution for this 
 yet, but what should work is creating a keytab for the portal user, and then 
 setting up cron to run k5start on reboot to keep the portal authenticated while 
-the server is up. When testing deployment, I tend to do something like:: 
+the server is up. A client keytab for the portal can be acquired with::
+
+    ipa-getkeytab -s IPA_SERVER_HOSTNAME -p portal@YOUR.REALM -k /etc/ipa/portal.keytab
+    chown apache:apache /etc/ipa/portal.keytab
+
+When testing deployment, I tend to do something like::
 
     su -s /bin/sh apache -c 'kinit portal'
 
