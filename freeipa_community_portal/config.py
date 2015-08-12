@@ -37,6 +37,13 @@ class Config(object):
         self._cfg.read(configs)
         self._captcha_key = None
 
+    def _get_default(self, section, option, raw=False, vars=None,
+                     default=None):
+        try:
+            return self._cfg.get(section, option, raw=raw, vars=vars)
+        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+            return default
+
     @property
     def captcha_db(self):
         return os.path.join(self._cfg.get('Database', 'db_directory'),
@@ -87,6 +94,20 @@ class Config(object):
     @property
     def default_from_email(self):
         return self._cfg.get('Mailers', 'default_from_email')
+
+    @property
+    def client_keytab(self):
+        keytab = self._get_default('KRB5', 'client_keytab')
+        if not keytab or not keytab.strip():
+            return None
+        return keytab
+
+    @property
+    def ccache_name(self):
+        ccache_name = self._get_default('KRB5', 'client_keytab')
+        if not ccache_name or not ccache_name.strip():
+            return None
+        return ccache_name
 
 
 config = Config()
