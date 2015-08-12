@@ -2,5 +2,5 @@ Pillow
 cherrypy
 jinja2
 sqlalchemy
-git+https://github.com/dperny/captcha.git
+captcha >= 0.2
 
