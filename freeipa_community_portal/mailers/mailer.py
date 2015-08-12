@@ -27,12 +27,13 @@ from jinja2 import Environment, PackageLoader
 
 # development defaults
 defaults = {
-    "smtp_server": "smtp.corp.redhat.com",
+    "smtp_server": "",
+    "smtp_port": 25,
     "smtp_use_auth": "False",
     "smtp_username": "",
     "smtp_password": "",
-    "default_from_email": "derny@redhat.com",
-    "default_admin_email": "derny@redhat.com"
+    "default_from_email": "",
+    "default_admin_email": ""
 }    
 
 # first, read in the configuration file
@@ -80,7 +81,7 @@ class Mailer(object):
             # The print statements in this function are useful for debugging
             server = smtplib.SMTP(MAIL_SERVER, SMTP_PORT)
             # print "server object created"
-            server.starttls();
+            server.starttls()
         else:
             server = smtplib.SMTP(MAIL_SERVER, SMTP_PORT)
 
