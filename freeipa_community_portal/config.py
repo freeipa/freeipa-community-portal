@@ -104,7 +104,7 @@ class Config(object):
 
     @property
     def ccache_name(self):
-        ccache_name = self._get_default('KRB5', 'client_keytab')
+        ccache_name = self._get_default('KRB5', 'ccache_name')
         if not ccache_name or not ccache_name.strip():
             return None
         return ccache_name
