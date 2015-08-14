@@ -11,13 +11,15 @@ import subprocess
 
 from ipalib import api
 
+from freeipa_community_portal import PACKAGE_DATA_DIR
+
 LOGFILE = '/var/log/freeipa-portal-install.log'
 PORTAL_CONF = '/etc/freeipa_community_portal.ini'
 HTTPD_CONF = '/etc/httpd/conf.d/freeipa_community_portal.conf'
 VAR_DIR = '/var/lib/freeipa_community_portal'
 WSGI_DIR = '/var/www/wsgi'
 EXECUTABLE = '/freeipa_community_portal.wsgi'
-PORTAL_CONF_SRC = sys.prefix + '/share/freeipa_community_portal/conf/freeipa_community_portal.ini'
+
 
 logger = logging.getLogger()
 
@@ -99,12 +101,12 @@ def install(opts):
     # give them one with sane defaults
     if not os.path.isfile(PORTAL_CONF):
         logger.warning('no portal config, creating one that might not work')
-        shutil.copy(PORTAL_CONF_SRC, PORTAL_CONF)
+        shutil.copy(PACKAGE_DATA_DIR + '/conf/freeipa_community_portal.ini', PORTAL_CONF)
 
     # if the user has not explicitly requested, create the apache conf
     if not ('no-apache-conf' in opts and opts['no-apache-conf'] is True):
         logger.warning('generating apache config file!')
-        shutil.copy(sys.prefix + '/share/freeipa_community_portal/conf/httpd.conf', HTTPD_CONF)
+        shutil.copy(PACKAGE_DATA_DIR + '/conf/httpd.conf', HTTPD_CONF)
 
     # create a /var/lib/freeipa-community-portal, if it does not exist
     # this is where our databases live
@@ -127,12 +129,12 @@ def install(opts):
         logger.info('creating directory for WSGI script')
         os.makedirs(WSGI_DIR)
     # remove a file that already exists, if there is one
-    if os.path.isfile(WSGI_DIR + EXECUTABLE):
+    if os.path.lexists(WSGI_DIR + EXECUTABLE):
         logger.warning('executable already exists, overwriting!')
         os.remove(WSGI_DIR + EXECUTABLE)
     # and then symlink the executable from libexec to the public script dir
     logger.info('symlinking WSGI executable')
-    os.symlink(sys.prefix + '/libexec' + EXECUTABLE, WSGI_DIR + EXECUTABLE)
+    os.symlink(PACKAGE_DATA_DIR + EXECUTABLE, WSGI_DIR + EXECUTABLE)
 
 def uninstall(opts):
     logger.info('Uninstallation started')

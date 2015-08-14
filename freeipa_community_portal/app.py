@@ -23,8 +23,8 @@ The main web server for the FreeIPA community portal.
 
 import cherrypy
 import jinja2
-import sys
 
+from freeipa_community_portal import PACKAGE_DATA_DIR
 from freeipa_community_portal.mailers.sign_up_mailer import SignUpMailer
 from freeipa_community_portal.mailers.reset_password_mailer import ResetPasswordMailer
 from freeipa_community_portal.model.user import User
@@ -150,7 +150,7 @@ def check_captcha(args):
 conf = {
     '/assets':  {
         'tools.staticdir.on': True,
-        'tools.staticdir.dir': '%(prefix)s/share/freeipa_community_portal/assets' % {'prefix': sys.prefix}
+        'tools.staticdir.dir': PACKAGE_DATA_DIR + '/assets',
     },
     '/user': {
         'request.dispatch': cherrypy.dispatch.MethodDispatcher(),

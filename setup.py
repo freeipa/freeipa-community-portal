@@ -20,8 +20,6 @@
 from setuptools import setup
 from glob import glob
 
-DATA = 'share/freeipa_community_portal/'
-
 with open('requirements.txt') as f:
     requirements = [
         line.strip() for line in f
@@ -45,21 +43,15 @@ setup(name='freeipa_community_portal',
           'freeipa_community_portal.mailers',
       ],
       package_data = {
-          'freeipa_community_portal': ['templates/*.html'],
+          'freeipa_community_portal': [
+              'freeipa_community_portal.wsgi',
+              'assets/*/*',
+              'conf/*',
+              'templates/*.html',
+              ],
           # TODO: move these somewhere where they can be edited by the user
-          'freeipa_community_portal.mailers': ['templates/*.txt']
+          'freeipa_community_portal.mailers': ['templates/*.txt'],
       },
-      data_files = [
-          # WSGI executable
-          ('libexec', ['freeipa_community_portal.wsgi']),
-          # asset files
-          (DATA+'assets/css', glob('assets/css/*.css')),
-          (DATA+'assets/js', glob('assets/js/*.js')),
-          (DATA+'assets/fonts', glob('assets/fonts/*')),
-          (DATA+'assets/img', glob('assets/img/*')),
-          # configuration files
-          (DATA+'conf', glob('conf/*')),
-      ],
       scripts = [
           'install/freeipa-portal-install',
           'install/create-portal-user'
