@@ -7,3 +7,6 @@ recursive-include docs *
 prune docs/build
 
 recursive-include tests *.py
+
+# not installed as package data
+include freeipa_community_portal/conf/freeipa_community_portal_dev.ini
