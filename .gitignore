@@ -13,6 +13,4 @@ __pycache__
 
 # testing infrastrucutre
 /.tox
-/resets.db
-/captcha.db
-/key
+/var

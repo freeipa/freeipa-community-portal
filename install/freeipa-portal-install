@@ -5,11 +5,9 @@ import os
 import shutil
 import sys
 import argparse
-import socket
-import time
 import subprocess
-
-from ipalib import api
+import time
+import pwd
 
 from freeipa_community_portal import PACKAGE_DATA_DIR
 
@@ -19,10 +17,10 @@ HTTPD_CONF = '/etc/httpd/conf.d/freeipa_community_portal.conf'
 VAR_DIR = '/var/lib/freeipa_community_portal'
 WSGI_DIR = '/var/www/wsgi'
 EXECUTABLE = 'freeipa_community_portal.wsgi'
+WEBSERVER_USER = pwd.getpwnam('apache')
 
 
 logger = logging.getLogger()
-
 
 # borrowing a bunch of code from the ipsilon installer
 def openlogs():
@@ -98,14 +96,16 @@ def install(opts):
 
     # create a /var/lib/freeipa-community-portal, if it does not exist
     # this is where our databases live
-    if not os.path.exists(VAR_DIR):
-        os.makedirs(VAR_DIR)
+    if not os.path.isdir(VAR_DIR):
+        os.makedirs(VAR_DIR, mode=0o750)
         # give apache this directory, so apache can write to it.
-        subprocess.call(["chown", "apache:apache", VAR_DIR])
+        os.chown(VAR_DIR, WEBSERVER_USER.pw_uid, WEBSERVER_USER.pw_gid)
 
     # create a key for the captcha
-    with open(os.path.join(VAR_DIR, 'key'), 'w') as fp:
+    with open(os.path.join(VAR_DIR, 'captcha.key'), 'wb') as fp:
         logger.info('writing captcha key file')
+        os.fchmod(fp.fileno(), 0o600)
+        os.fchown(fp.fileno(), WEBSERVER_USER.pw_uid, WEBSERVER_USER.pw_gid)
         fp.write(os.urandom(8))
 
     # set httpd_can_sendmail so that we send mail instead of crashing
@@ -115,7 +115,7 @@ def install(opts):
     # create a directory to store our public scripts.
     if not os.path.exists(WSGI_DIR):
         logger.info('creating directory for WSGI script')
-        os.makedirs(WSGI_DIR)
+        os.makedirs(WSGI_DIR, mode=0o755)
     # remove a file that already exists, if there is one
     if os.path.lexists(os.path.join(WSGI_DIR, EXECUTABLE)):
         logger.warning('executable already exists, overwriting!')

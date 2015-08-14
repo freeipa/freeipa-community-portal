@@ -85,14 +85,14 @@ probably know what you're doing.
 
 Then, the installer creates the directory where the portal keeps its databases::
 
-    mkdir -p  /var/lib/freeipa_community_portal
+    mkdir -p -m 750 /var/lib/freeipa_community_portal
     chown apache:apache /var/lib/freeipa_community_portal/
 
 If Apache doesn't own this folder, it will vomit when attempting to put 
 databases in it. Next, the installer generates a random key and stores it in a 
-file called "key" the above directory. The portal uses this key to secure the 
-captcha. It would be mostly harmless if this key gets compromised, so there's 
-no need to take any special precautions to secure it.
+file called "captcha.key" the above directory. The portal uses this key to
+secure the captcha. It would be mostly harmless if this key gets compromised,
+so there's no need to take any special precautions to secure it.
 
 After this, the installer does::
 

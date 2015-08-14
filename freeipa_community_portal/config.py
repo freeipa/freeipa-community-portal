@@ -18,24 +18,52 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import ConfigParser
+import errno
 import os
+
+from . import PACKAGE_DATA_DIR
 
 
 class Config(object):
     default_configs = [
         '/etc/freeipa_community_portal.ini',
-        'conf/freeipa_community_portal_dev.ini'
+        os.path.join(PACKAGE_DATA_DIR,
+                     'conf/freeipa_community_portal_dev.ini'),
     ]
 
     captcha_length = 4
+    umask = 0o027
 
     def __init__(self, *configs):
         if not configs:
             configs = self.default_configs
         self._cfg = ConfigParser.SafeConfigParser()
-        print configs
         self._cfg.read(configs)
         self._captcha_key = None
+        self._initialize()
+
+    def _initialize(self):
+        # set secure umask
+        os.umask(self.umask)
+        # create our var directory with secure mode
+        if not os.path.isdir(self.db_directory):
+            os.makedirs(self.db_directory, mode=0o750)
+        # read or create captcha key file
+        try:
+            with open(self.captcha_key_location, 'rb') as f:
+                self._captcha_key = f.read()
+        except IOError as e:
+            if e.errno != errno.ENOENT:
+                raise
+            new_key = os.urandom(8)
+            # write key with secure mode
+            with open(self.captcha_key_location, 'wb') as f:
+                os.fchmod(f.fileno(), 0o600)
+                f.write(new_key)
+                os.fdatasync(f.fileno())
+            # re-read key from file system in case somebody else wrote to it.
+            with open(self.captcha_key_location, 'rb') as f:
+                self._captcha_key = f.read()
 
     def _get_default(self, section, option, raw=False, vars=None,
                      default=None):
@@ -45,25 +73,24 @@ class Config(object):
             return default
 
     @property
+    def db_directory(self):
+        return self._cfg.get('Database', 'db_directory')
+
+    @property
     def captcha_db(self):
-        return os.path.join(self._cfg.get('Database', 'db_directory'),
-                            'captcha.db')
+        return os.path.join(self.db_directory, 'captcha.db')
 
     @property
     def captcha_key_location(self):
-        return self._cfg.get('Captcha', 'key_location')
+        return os.path.join(self.db_directory, 'captcha.key')
 
     @property
     def captcha_key(self):
-        if self._captcha_key is None:
-            with open(self.captcha_key_location, 'rb') as f:
-                self._captcha_key = f.read()
         return self._captcha_key
 
     @property
     def reset_db(self):
-        return os.path.join(self._cfg.get('Database', 'db_directory'),
-                            'resets.db')
+        return os.path.join(self.db_directory, 'resets.db')
 
     @property
     def smtp_server(self):
