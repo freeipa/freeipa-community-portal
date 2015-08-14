@@ -46,7 +46,8 @@ setup(name='freeipa_community_portal',
           'freeipa_community_portal': [
               'freeipa_community_portal.wsgi',
               'assets/*/*',
-              'conf/*',
+              'conf/freeipa_community_portal.ini',
+              'conf/httpd.conf',
               'templates/*.html',
               ],
           # TODO: move these somewhere where they can be edited by the user
