@@ -11,21 +11,21 @@ import subprocess
 
 from ipalib import api
 
+from freeipa_community_portal import PACKAGE_DATA_DIR
+
 LOGFILE = '/var/log/freeipa-portal-install.log'
 PORTAL_CONF = '/etc/freeipa_community_portal.ini'
 HTTPD_CONF = '/etc/httpd/conf.d/freeipa_community_portal.conf'
 VAR_DIR = '/var/lib/freeipa_community_portal'
 WSGI_DIR = '/var/www/wsgi'
-EXECUTABLE = '/freeipa_community_portal.wsgi'
-PORTAL_CONF_SRC = sys.prefix + '/share/freeipa_community_portal/conf/freeipa_community_portal.ini'
+EXECUTABLE = 'freeipa_community_portal.wsgi'
+
 
 logger = logging.getLogger()
 
+
 # borrowing a bunch of code from the ipsilon installer
 def openlogs():
-    # we're operating on the global logger
-    global logger
-    
     # if the logfile is actual a file
     if os.path.isfile(LOGFILE):
         try:
@@ -33,11 +33,8 @@ def openlogs():
             created = '%s' % time.ctime(os.path.getctime(LOGFILE))
             shutil.move(LOGFILE, '%s.%s' % (LOGFILE, created))
         except IOError:
-            # and if we can't? pftt. no problem 
+            # and if we can't? pftt. no problem
             pass
-    
-    # now we set the logger
-    logger = logging.getLogger()
 
     # first, we set up the error logger
     try:
@@ -61,50 +58,43 @@ def openlogs():
     ch.setLevel(logging.INFO)
     logger.addHandler(ch)
 
-def create_ipa_user():
-    pass
-    # subprocess.call('ipa privilege-add \'Portal privileges\' --desc=\'Portal privileges\'')
-    # ipa privilege-add 'Portal management' --desc='Portal management'
-    # ipa privilege-add-permission 'Portal management'
-    #       --permission='System: Add Users'
-    #       --permission='System: Change User password'
-    #       --permission='System: Read UPG Definition'
-    #       --permission='System: Add User to default group'
-    # ipa role-add 'Portal' --desc="self-service portals"
-    # ipa role-add-privilege 'Portal' --privilege='Portal management'
-    # ipa useradd --first='Self' --last="Service" portal
-    # ipa role-add-member --users=portal 'Portal'
-    # ipa-getkeytab -s cypher.derny.test -p portal@DERNY.TEST -k /etc/ipa/ipa-rest.keytab
-    # add permissions System: Add Users, System: Change User password
-    
 
 def parse_args():
     """parses the command line arguments passed in
 
-    return: a list of 
+    return: dict of arguments
     """
-    parser = argparse.ArgumentParser(description='FreeIPA Portal Install Options')
+    parser = argparse.ArgumentParser(
+        description='Install FreeIPA Community Portal')
     parser.add_argument('--version', action='version', version='%(prog)s 0.1')
-    parser.add_argument('--uninstall', action='store_true',
+    parser.add_argument(
+        '--uninstall', action='store_true',
         help="Uninstall the server and all data")
-    parser.add_argument('--no-apache-conf', action='store_true',
-        help="Do not generate the Apache config. Use if custom apache config will be used")
-                        
+    parser.add_argument(
+        '--no-apache-conf', action='store_true',
+        help="Do not generate the Apache config. "
+             "Use if custom apache config will be used")
+
     return vars(parser.parse_args())
+
 
 def install(opts):
     logger.info('Installation started')
 
-    # first things first, if the user hasn't supplied a config file, then 
+    # first things first, if the user hasn't supplied a config file, then
     # give them one with sane defaults
     if not os.path.isfile(PORTAL_CONF):
         logger.warning('no portal config, creating one that might not work')
-        shutil.copy(PORTAL_CONF_SRC, PORTAL_CONF)
+        conf_src = os.path.join(
+            PACKAGE_DATA_DIR, 'conf', 'freeipa_community_portal.ini')
+        shutil.copy(conf_src, PORTAL_CONF)
 
     # if the user has not explicitly requested, create the apache conf
     if not ('no-apache-conf' in opts and opts['no-apache-conf'] is True):
         logger.warning('generating apache config file!')
-        shutil.copy(sys.prefix + '/share/freeipa_community_portal/conf/httpd.conf', HTTPD_CONF)
+        shutil.copy(
+            os.path.join(PACKAGE_DATA_DIR, 'conf', 'httpd.conf'),
+            HTTPD_CONF)
 
     # create a /var/lib/freeipa-community-portal, if it does not exist
     # this is where our databases live
@@ -114,7 +104,7 @@ def install(opts):
         subprocess.call(["chown", "apache:apache", VAR_DIR])
 
     # create a key for the captcha
-    with open(VAR_DIR + '/key', 'w') as fp:
+    with open(os.path.join(VAR_DIR, 'key'), 'w') as fp:
         logger.info('writing captcha key file')
         fp.write(os.urandom(8))
 
@@ -127,12 +117,15 @@ def install(opts):
         logger.info('creating directory for WSGI script')
         os.makedirs(WSGI_DIR)
     # remove a file that already exists, if there is one
-    if os.path.isfile(WSGI_DIR + EXECUTABLE):
+    if os.path.lexists(os.path.join(WSGI_DIR, EXECUTABLE)):
         logger.warning('executable already exists, overwriting!')
-        os.remove(WSGI_DIR + EXECUTABLE)
+        os.remove(os.path.join(WSGI_DIR, EXECUTABLE))
     # and then symlink the executable from libexec to the public script dir
     logger.info('symlinking WSGI executable')
-    os.symlink(sys.prefix + '/libexec' + EXECUTABLE, WSGI_DIR + EXECUTABLE)
+    os.symlink(
+        os.path.join(PACKAGE_DATA_DIR, EXECUTABLE),
+        os.path.join(WSGI_DIR, EXECUTABLE))
+
 
 def uninstall(opts):
     logger.info('Uninstallation started')
@@ -154,29 +147,23 @@ def uninstall(opts):
     if os.path.exists(VAR_DIR):
         shutil.rmtree(VAR_DIR)
 
-    # set httpd_can_sendmail to true so that we send mail instead of crashing
-    # TODO: what if the user uses this bool for something different after?
-    # just leave it set for now
-    # logger.info('setting httpd_can_sendmail SELinux bool')
-    # subprocess.call(['setsebool', 'httpd_can_sendmail', 'on'])
-
-    # remove the wsgi script, if it exists. 
+    # remove the wsgi script, if it exists.
     # leave the wsgi directory. idk it feels like something else might use that
-    if os.path.isfile(WSGI_DIR + EXECUTABLE):
+    if os.path.isfile(os.path.join(WSGI_DIR, EXECUTABLE)):
         logger.info('deleting wsgi symlink')
-        os.remove(WSGI_DIR + EXECUTABLE)
-    
-    
-def isUninstall(opts):
+        os.remove(os.path.join(WSGI_DIR, EXECUTABLE))
+
+
+def is_uninstall(opts):
     """ returns true if --uninstall is in the options """
-    return 'uninstall' in opts and opts['uninstall'] is True
+    return opts.get('uninstall')
 
 if __name__ == '__main__':
     opts = []
     out = 0
     openlogs()
 
-    try: 
+    try:
         opts = parse_args()
         logger.setLevel(logging.DEBUG)
 
@@ -184,14 +171,14 @@ if __name__ == '__main__':
         for k in sorted(opts.iterkeys()):
             logger.debug('%s: %s', k, opts[k])
 
-        if isUninstall(opts):
+        if is_uninstall(opts):
             uninstall(opts)
         else:
             install(opts)
 
     except Exception as e:
         logger.exception(e)
-        if isUninstall(opts):
+        if is_uninstall(opts):
             logger.info('Uninstallation aborted')
         else:
             logger.info('Installation aborted')
@@ -202,7 +189,7 @@ if __name__ == '__main__':
         raise
     finally:
         if out == 0:
-            if isUninstall(opts):
+            if is_uninstall(opts):
                 logger.info('Uninstallation complete')
             else:
                 logger.info('Installation complete')
