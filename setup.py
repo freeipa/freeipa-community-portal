@@ -22,9 +22,19 @@ from glob import glob
 
 DATA = 'share/freeipa_community_portal/'
 
+with open('requirements.txt') as f:
+    requirements = [
+        line.strip() for line in f
+        if line.strip() and not line.startswith('#')
+    ]
+
+with open('README') as f:
+    long_description = f.read()
+
 setup(name='freeipa_community_portal',
       version='0.2',
       description='A web application for FreeIPA in a community setting',
+      long_description=long_description,
       author='Drew Erny',
       author_email='derny@redhat.com',
       license='GPLv3',
@@ -54,5 +64,6 @@ setup(name='freeipa_community_portal',
           'install/freeipa-portal-install',
           'install/create-portal-user'
       ],
-      zip_safe=False
+      zip_safe=False,
+      install_requires=requirements,
       )

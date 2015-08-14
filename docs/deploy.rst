@@ -39,10 +39,10 @@ Jinja2 provides templating, and SQLAlchemy is used for the databases::
 
     dnf install python-cherrypy python-jinja2 python-sqlalchemy
 
-Here, we switch to using pip. We install captcha from github, because we rely
-on features not present in the Pypi repository. Eventually, we won't need this::
+Here, we switch to using pip. We install captcha from PyPI. We need at least
+version 0.2 of the captcha package::
 
-    pip install git+https://github.com/dperny/captcha.git
+    pip install captcha >= 0.2
 
 Finally, the portal itself::
 
