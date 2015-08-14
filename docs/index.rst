@@ -11,11 +11,10 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   user_workflow
    deploy
    captcha
    development
-   user_workflow
-
 
 Indices and tables
 ==================
