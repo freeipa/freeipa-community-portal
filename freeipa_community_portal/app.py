@@ -21,6 +21,8 @@
 The main web server for the FreeIPA community portal.
 """
 
+import os
+
 import cherrypy
 import jinja2
 
@@ -150,7 +152,7 @@ def check_captcha(args):
 conf = {
     '/assets':  {
         'tools.staticdir.on': True,
-        'tools.staticdir.dir': PACKAGE_DATA_DIR + '/assets',
+        'tools.staticdir.dir': os.path.join(PACKAGE_DATA_DIR, 'assets'),
     },
     '/user': {
         'request.dispatch': cherrypy.dispatch.MethodDispatcher(),
