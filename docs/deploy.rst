@@ -143,18 +143,20 @@ add a user called "portal" with the requisite permissions.
 The second thing needed is a way to authenticate via Kerberos as the user 
 created in the previous step. Specifically, we need to authenticate as a user 
 principal, and not a service principal. There's no canonical solution for this 
-yet, but what should work is creating a keytab for the portal user, and then 
-setting up cron to run k5start on reboot to keep the portal authenticated while 
-the server is up. A client keytab for the portal can be acquired with::
+yet. A keytab for the portal user is an easy way to automatically authenticate
+the portal user. A client keytab for the portal can be acquired with
+``ipa-getkeytab``. You must properly secure the keytab, so it can only be
+read by the webserver::
 
     ipa-getkeytab -s IPA_SERVER_HOSTNAME -p portal@YOUR.REALM -k /etc/ipa/portal.keytab
     chown apache:apache /etc/ipa/portal.keytab
+    chmod 640 /etc/ipa/portal.keytab
 
-When testing deployment, I tend to do something like::
-
-    su -s /bin/sh apache -c 'kinit portal'
-
-but this method requires manual intervention. 
+If you don't remember the values for IPA server and realm, have a look at
+``/etc/ipa/default.conf``. You can set the path to keytab in
+``/etc/freeipa_community_portal.ini``. The app sets the environment variable
+``KRB5_CLIENT_KTNAME``, when the value is not empty. ipalib picks the keytab
+up automatically.
 
 After all this, you should probably set up and configure mod_ssl and put the 
 app behind HTTPS, but that is outside of the scope of this guide. 

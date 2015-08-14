@@ -26,37 +26,25 @@ import string
 import random
 import base64
 import hmac
-import os
 
 from sqlalchemy import Table, Column, MetaData, String, DateTime, create_engine
 from sqlalchemy.sql import select, insert, delete
 
-import ConfigParser
-
-Config = ConfigParser.ConfigParser()
-Config.read(['/etc/freeipa_community_portal.ini', 'conf/freeipa_community_portal_dev.ini'])
-
-KEY_LOCATION = Config.get('Captcha','key_location')
-DATABASE_LOCATION = Config.get('Database', 'db_directory') + 'captcha.db'
-
-print DATABASE_LOCATION
+from ..config import config
 
 # retrieve the captcha key from the key file
 # trust me, i know cryptography
-def getKey():
-    with open(KEY_LOCATION) as fp:
-        return fp.read()
+LENGTH = config.captcha_length
+KEY = config.captcha_key
 
-LENGTH = 4
-KEY = getKey()
-
-_engine = create_engine('sqlite:///' + DATABASE_LOCATION)
+_engine = create_engine('sqlite:///' + config.captcha_db)
 _metadata = MetaData()
 _captcha = Table('captcha', _metadata,
     Column('hmac', String, primary_key=True),
     Column('timestamp', DateTime)
 )
 _metadata.create_all(_engine)
+
 
 class CaptchaHelper(object):
     """Class for making a captcha for the client to display."""
@@ -79,7 +67,6 @@ class CaptchaHelper(object):
             )
         )
         conn.close()
-            
 
     def datauri(self):
         """Returns the captcha image to a data-uri, in jpeg format"""

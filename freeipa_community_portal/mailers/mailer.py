@@ -21,33 +21,11 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
-import ConfigParser
 
 from jinja2 import Environment, PackageLoader
 
-# development defaults
-defaults = {
-    "smtp_server": "",
-    "smtp_port": 25,
-    "smtp_use_auth": "False",
-    "smtp_username": "",
-    "smtp_password": "",
-    "default_from_email": "",
-    "default_admin_email": ""
-}    
+from ..config import config
 
-# first, read in the configuration file
-Config = ConfigParser.ConfigParser(defaults)
-Config.read(['/etc/freeipa_community_portal.ini', 'conf/freeipa_community_portal_dev.ini'])
-
-MAIL_SERVER = Config.get("Mailers","smtp_server")
-SMTP_PORT = Config.getint("Mailers","smtp_port")
-SMTP_SEC_TYPE = Config.get("Mailers","smtp_security_type")
-DEFAULT_TO = Config.get("Mailers","default_admin_email")
-DEFAULT_FROM = Config.get("Mailers","default_from_email")
-USE_AUTH = Config.getboolean("Mailers","smtp_use_auth")
-SMTP_USERNAME = Config.get("Mailers","smtp_username")
-SMTP_PASSWORD = Config.get("Mailers","smtp_password")
 
 class Mailer(object):
     """ Base class for sending mail """
@@ -56,8 +34,8 @@ class Mailer(object):
     def __init__(self):
         self.subject = "FreeIPA Community Portal: Notice"
         self.template = 'default.txt'
-        self.to = DEFAULT_TO
-        self.frm = DEFAULT_FROM
+        self.to = config.default_admin_email
+        self.frm = config.default_from_email
         self.template_opts = {}
 
     def mail(self):
@@ -75,18 +53,18 @@ class Mailer(object):
         return msg
 
     def _send(self, contents):
-        if SMTP_SEC_TYPE == "SSL":
-            server = smtplib.SMTP_SSL(MAIL_SERVER, SMTP_PORT)
-        elif SMTP_SEC_TYPE == "STARTTLS":
-            # The print statements in this function are useful for debugging
-            server = smtplib.SMTP(MAIL_SERVER, SMTP_PORT)
-            # print "server object created"
-            server.starttls()
+        if config.smtp_security_type == "SSL":
+            smtp_cls = smtplib.SMTP_SSL
         else:
-            server = smtplib.SMTP(MAIL_SERVER, SMTP_PORT)
+            smtp_cls = smtplib.SMTP
 
-        if USE_AUTH:
-            server.login(SMTP_USERNAME,SMTP_PASSWORD)
+        server = smtp_cls(config.smtp_server, config.smtp_port)
+        if config.smtp_security_type == "STARTTLS":
+            server.starttls()
+
+        auth = config.smtp_auth
+        if auth is not None:
+            server.login(*auth)
         # print "tls started"
         server.sendmail(contents['From'], contents['To'], contents.as_string())
         # print "mail sent"
