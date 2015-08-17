@@ -35,7 +35,7 @@ The CAPTCHA functionality relies on the Pillow library::
     dnf install python-pillow
 
 These components are the core application. CherryPy as the web framework, 
-Jinja2 provides templating, and SQLAlchemy is used for the databases::
+Jinja2 provides templating, and SQLAlchemy is used for the database::
 
     dnf install python-cherrypy python-jinja2 python-sqlalchemy
 
@@ -83,13 +83,13 @@ Next, the installer copies the apache config from the conf directory to
 installation of the portal, you probably will not need this file, because you
 probably know what you're doing.
 
-Then, the installer creates the directory where the portal keeps its databases::
+Then, the installer creates the directory where the portal keeps its database::
 
     mkdir -p -m 750 /var/lib/freeipa_community_portal
     chown apache:apache /var/lib/freeipa_community_portal/
 
 If Apache doesn't own this folder, it will vomit when attempting to put 
-databases in it. Next, the installer generates a random key and stores it in a 
+database in it. Next, the installer generates a random key and stores it in a
 file called "captcha.key" the above directory. The portal uses this key to
 secure the captcha. It would be mostly harmless if this key gets compromised,
 so there's no need to take any special precautions to secure it.

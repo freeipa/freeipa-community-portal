@@ -21,34 +21,48 @@ import ConfigParser
 import errno
 import os
 
-from . import PACKAGE_DATA_DIR
+from sqlalchemy import MetaData, create_engine
 
 
 class Config(object):
-    default_configs = [
-        '/etc/freeipa_community_portal.ini',
-        os.path.join(PACKAGE_DATA_DIR,
-                     'conf/freeipa_community_portal_dev.ini'),
-    ]
+    development_config = 'freeipa_community_portal/conf/freeipa_community_portal_dev.ini'
+    deployment_config = '/etc/freeipa_community_portal.ini'
 
     captcha_length = 4
     umask = 0o027
 
-    def __init__(self, *configs):
-        if not configs:
-            configs = self.default_configs
-        self._cfg = ConfigParser.SafeConfigParser()
-        self._cfg.read(configs)
-        self._captcha_key = None
-        self._initialize()
+    metadata = MetaData()
 
-    def _initialize(self):
+    def __init__(self):
+        self._cfg = None
+        self.configfile = None
+        self._captcha_key = None
+        self._engine = None
+
+    def __nonzero__(self):
+        return self._cfg is not None
+
+    def load(self, configfile):
+        cfg = ConfigParser.SafeConfigParser()
+        with open(configfile) as f:
+            cfg.readfp(f, configfile)
+        self._cfg = cfg
+        self.configfile = configfile
         # set secure umask
         os.umask(self.umask)
-        # create our var directory with secure mode
+        self._init_vardir()
+        self._init_captcha_key()
+        self._init_engine()
+
+    def _init_vardir(self):
+        """Create our var directory with secure mode
+        """
         if not os.path.isdir(self.db_directory):
             os.makedirs(self.db_directory, mode=0o750)
-        # read or create captcha key file
+
+    def _init_captcha_key(self):
+        """Read or create captcha key file
+        """
         try:
             with open(self.captcha_key_location, 'rb') as f:
                 self._captcha_key = f.read()
@@ -65,6 +79,14 @@ class Config(object):
             with open(self.captcha_key_location, 'rb') as f:
                 self._captcha_key = f.read()
 
+    def _init_engine(self):
+        """Create engine and tables
+        """
+        if self._engine is not None:
+            self._engine.close()
+        self._engine = create_engine('sqlite:///' + self.communityportal_db)
+        self.metadata.create_all(self._engine)
+
     def _get_default(self, section, option, raw=False, vars=None,
                      default=None):
         try:
@@ -73,12 +95,16 @@ class Config(object):
             return default
 
     @property
+    def engine(self):
+        return self._engine
+
+    @property
     def db_directory(self):
         return self._cfg.get('Database', 'db_directory')
 
     @property
-    def captcha_db(self):
-        return os.path.join(self.db_directory, 'captcha.db')
+    def communityportal_db(self):
+        return os.path.join(self.db_directory, 'communityportal.db')
 
     @property
     def captcha_key_location(self):
@@ -87,10 +113,6 @@ class Config(object):
     @property
     def captcha_key(self):
         return self._captcha_key
-
-    @property
-    def reset_db(self):
-        return os.path.join(self.db_directory, 'resets.db')
 
     @property
     def smtp_server(self):
