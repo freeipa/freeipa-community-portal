@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 import os
 import base64
 
-from sqlalchemy import Table, Column, MetaData, String, DateTime, create_engine
+from sqlalchemy import Table, Column, String, DateTime
 from sqlalchemy.sql import select, insert, delete
 
 from ipalib import api, errors
@@ -29,17 +29,11 @@ from ipalib import api, errors
 from . import api_connect
 from ..config import config
 
-
-_engine = create_engine('sqlite:///' + config.reset_db)
-
-_metadata = MetaData()
-_password_reset = Table('password_reset', _metadata,
+_password_reset = Table('password_reset', config.metadata,
     Column('username', String, primary_key=True),
     Column('token', String),
     Column('timestamp', DateTime)
 )
-
-_metadata.create_all(_engine)
 
 USE_BY = timedelta(days=3)
 
@@ -63,7 +57,7 @@ class PasswordReset(object):
         None otherwise
         """
         # connect to the database
-        conn = _engine.connect()
+        conn = config.engine.connect()
         # and grab a record cooresponding to this username
         result = conn.execute(
             select([_password_reset]).where(_password_reset.c.username == username)
@@ -89,7 +83,7 @@ class PasswordReset(object):
 
     def save(self):
         if self.check_valid():
-            conn = _engine.connect()
+            conn = config.engine.connect()
             self.expire(self.username)
             conn.execute(
                 _password_reset.insert().values(
@@ -134,7 +128,7 @@ class PasswordReset(object):
 
     @staticmethod
     def expire(username):
-        conn = _engine.connect()
+        conn = config.engine.connect()
         conn.execute(
             delete(_password_reset).where(_password_reset.c.username == username)
         )

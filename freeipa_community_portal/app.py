@@ -33,6 +33,7 @@ from freeipa_community_portal.model.user import User
 from freeipa_community_portal.model.password_reset import PasswordReset
 # TODO: move over to a "from" import
 import freeipa_community_portal.model.captcha_wrapper as captcha_helper
+from freeipa_community_portal.config import config
 
 TEMPLATE_ENV = jinja2.Environment(loader=jinja2.PackageLoader('freeipa_community_portal','templates'))
 
@@ -149,6 +150,8 @@ def check_captcha(args):
         return "Incorrect Captcha response"
     else:
         return None
+
+
 conf = {
     '/assets':  {
         'tools.staticdir.on': True,
@@ -169,17 +172,16 @@ conf = {
     }
 }
 
+
 def app():
     """Main entry point for the web application. If you run this library as a
     standalone application, you can just use this function
     """
+    if not config:
+        raise ValueError('Run config.load(configfile) first!')
 
     webapp = SelfServicePortal()
-    webapp.user = SelfServiceUserRegistration() # pylint: disable=attribute-defined-outside-init
+    webapp.user = SelfServiceUserRegistration()  # pylint: disable=attribute-defined-outside-init
     webapp.request_reset = RequestSelfServicePasswordReset()
     webapp.reset_password = SelfServicePasswordReset()
     return webapp
-
-if __name__ == "__main__":
-    webapp = app()
-    cherrypy.quickstart(webapp, '/', conf)

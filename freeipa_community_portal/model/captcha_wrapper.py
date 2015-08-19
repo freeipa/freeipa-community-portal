@@ -27,23 +27,18 @@ import random
 import base64
 import hmac
 
-from sqlalchemy import Table, Column, MetaData, String, DateTime, create_engine
+from sqlalchemy import Table, Column, String, DateTime
 from sqlalchemy.sql import select, insert, delete
 
 from ..config import config
 
 # retrieve the captcha key from the key file
 # trust me, i know cryptography
-LENGTH = config.captcha_length
-KEY = config.captcha_key
 
-_engine = create_engine('sqlite:///' + config.captcha_db)
-_metadata = MetaData()
-_captcha = Table('captcha', _metadata,
+_captcha = Table('captcha', config.metadata,
     Column('hmac', String, primary_key=True),
     Column('timestamp', DateTime)
 )
-_metadata.create_all(_engine)
 
 
 class CaptchaHelper(object):
@@ -54,12 +49,12 @@ class CaptchaHelper(object):
         """create a new captcha """
         # generate a captcha solution, which consists of 4 letter and digits
         self.solution = u''.join(random.SystemRandom().choice(
-            (string.ascii_uppercase + string.digits).translate(None, '0OQ')) for _ in range(LENGTH)
+            (string.ascii_uppercase + string.digits).translate(None, '0OQ')) for _ in range(config.captcha_length)
         )
 
         # generate the captcha image, hold it as bytes
         self.image = self.image_generator.generate(self.solution, format='jpeg').getvalue()
-        conn = _engine.connect()
+        conn = config.engine.connect()
         conn.execute(
             _captcha.insert().values(
                 hmac=self.solution_hash(),
@@ -78,14 +73,14 @@ class CaptchaHelper(object):
     def solution_hash(self):
         """combines the captcha solution and a secret key into a hash that can
         be used to prove that a correct answer has been found"""
-        return hmac.new(KEY, self.solution).hexdigest()
+        return hmac.new(config.captcha_key, self.solution).hexdigest()
 
 def checkResponse(response, solution):
     """Compares a given solution hash with the response provided"""
     valid = False
-    digest = hmac.new(KEY, response.upper()).hexdigest()
+    digest = hmac.new(config.captcha_key, response.upper()).hexdigest()
     if hmac.compare_digest(digest, solution.encode('ascii','ignore')): 
-        conn = _engine.connect()
+        conn = config.engine.connect()
         result = conn.execute(
             select([_captcha]).where(_captcha.c.hmac == digest)
         )
