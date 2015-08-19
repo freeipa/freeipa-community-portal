@@ -25,7 +25,8 @@ from sqlalchemy import MetaData, create_engine
 
 
 class Config(object):
-    development_config = 'freeipa_community_portal/conf/freeipa_community_portal_dev.ini'
+    development_config = ('freeipa_community_portal/conf/'
+                          'freeipa_community_portal_dev.ini')
     deployment_config = '/etc/freeipa_community_portal.ini'
 
     captcha_length = 4

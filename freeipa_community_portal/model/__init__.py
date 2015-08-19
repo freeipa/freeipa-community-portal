@@ -29,6 +29,7 @@ from ipalib import api
 
 from ..config import config
 
+
 def api_connect():
     """Initialize and connect to FreeIPA's RPC server.
     """
@@ -47,4 +48,3 @@ def api_connect():
 
     if not api.Backend.rpcclient.isconnected():
         api.Backend.rpcclient.connect()
-

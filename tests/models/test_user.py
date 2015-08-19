@@ -11,6 +11,7 @@ def test_user_init():
     assert user.username == ""
     assert user.email == ""
 
+
 def test_user_init_with_args_with_username():
     args = {
         "given_name": "test",
@@ -24,6 +25,7 @@ def test_user_init_with_args_with_username():
     assert user.family_name == args["family_name"]
     assert user.username == args["username"]
     assert user.email == args["email"]
+
 
 def test_user_init_with_args_no_username():
     args = {
@@ -39,19 +41,26 @@ def test_user_init_with_args_no_username():
     assert user.email == args["email"]
 
 # wtf am i doing
+
+
 class mock_errors():
     # this seems logical
+
     class ValidationError(Exception):
+
         def __init__(self):
             self.msg = 'test_valid'
 
     class RequirementError(Exception):
+
         def __init__(self):
             self.msg = 'test_req'
 
     class DuplicateEntry(Exception):
+
         def __init__(self):
             self.msg = 'test_dup'
+
 
 def test_save_no_errors(monkeypatch):
     def mock_call_api(self):
@@ -61,26 +70,32 @@ def test_save_no_errors(monkeypatch):
 
     assert user.save() is None
 
+
 def test_save_validation_error(monkeypatch):
     def mock_call_api(self):
         raise mock_errors.ValidationError
     monkeypatch.setattr(User, '_call_api', mock_call_api)
-    monkeypatch.setattr(freeipa_community_portal.model.user, 'errors', mock_errors)
+    monkeypatch.setattr(
+        freeipa_community_portal.model.user, 'errors', mock_errors)
     user = User()
     assert user.save() == 'test_valid'
+
 
 def test_save_requirement_error(monkeypatch):
     def mock_call_api(self):
         raise mock_errors.RequirementError
     monkeypatch.setattr(User, '_call_api', mock_call_api)
-    monkeypatch.setattr(freeipa_community_portal.model.user, 'errors', mock_errors)
+    monkeypatch.setattr(
+        freeipa_community_portal.model.user, 'errors', mock_errors)
     user = User()
     assert user.save() == 'test_req'
+
 
 def test_save_requirement_error(monkeypatch):
     def mock_call_api(self):
         raise mock_errors.DuplicateEntry
     monkeypatch.setattr(User, '_call_api', mock_call_api)
-    monkeypatch.setattr(freeipa_community_portal.model.user, 'errors', mock_errors)
+    monkeypatch.setattr(
+        freeipa_community_portal.model.user, 'errors', mock_errors)
     user = User()
     assert user.save() == 'test_dup'

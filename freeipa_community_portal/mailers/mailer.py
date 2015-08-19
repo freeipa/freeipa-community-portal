@@ -18,9 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """ Contains the base class for sending mail """
+import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import smtplib
 
 from jinja2 import Environment, PackageLoader
 
@@ -28,8 +28,10 @@ from ..config import config
 
 
 class Mailer(object):
+
     """ Base class for sending mail """
-    env = Environment(loader=PackageLoader('freeipa_community_portal.mailers','templates'))
+    env = Environment(
+        loader=PackageLoader('freeipa_community_portal.mailers', 'templates'))
 
     def __init__(self):
         self.subject = "FreeIPA Community Portal: Notice"

@@ -19,16 +19,17 @@
 
 """ Module for handling captchas in the community portal. """
 
-from captcha.image import ImageCaptcha
-from datetime import datetime, timedelta
-
-import string
-import random
 import base64
 import hmac
+import random
+import string
 
-from sqlalchemy import Table, Column, String, DateTime
-from sqlalchemy.sql import select, insert, delete
+from datetime import datetime
+
+from captcha.image import ImageCaptcha
+
+from sqlalchemy import Column, DateTime, String, Table
+from sqlalchemy.sql import delete, select
 
 from ..config import config
 
@@ -36,24 +37,28 @@ from ..config import config
 # trust me, i know cryptography
 
 _captcha = Table('captcha', config.metadata,
-    Column('hmac', String, primary_key=True),
-    Column('timestamp', DateTime)
-)
+                 Column('hmac', String, primary_key=True),
+                 Column('timestamp', DateTime)
+                 )
 
 
 class CaptchaHelper(object):
-    """Class for making a captcha for the client to display."""
+    """Class for making a captcha for the client to display.
+    """
     image_generator = ImageCaptcha()
 
     def __init__(self):
         """create a new captcha """
         # generate a captcha solution, which consists of 4 letter and digits
-        self.solution = u''.join(random.SystemRandom().choice(
-            (string.ascii_uppercase + string.digits).translate(None, '0OQ')) for _ in range(config.captcha_length)
-        )
+        chars = string.ascii_uppercase + string.digits
+        chars = chars.translate(None, '0OQ')
+        systemrandom = random.SystemRandom()
+        self.solution = u''.join(systemrandom.choice(chars)
+                                 for _ in range(config.captcha_length))
 
         # generate the captcha image, hold it as bytes
-        self.image = self.image_generator.generate(self.solution, format='jpeg').getvalue()
+        self.image = self.image_generator.generate(
+            self.solution, format='jpeg').getvalue()
         conn = config.engine.connect()
         conn.execute(
             _captcha.insert().values(
@@ -68,18 +73,20 @@ class CaptchaHelper(object):
         # convert the image bytestring to base64
         data64 = u''.join(base64.encodestring(self.image).splitlines())
         # then prepend the vital datas and return
-        return u'data:{mime};base64,{data}'.format(mime='image/jpeg', data=data64)
+        return u'data:{mime};base64,{data}'.format(mime='image/jpeg',
+                                                   data=data64)
 
     def solution_hash(self):
         """combines the captcha solution and a secret key into a hash that can
         be used to prove that a correct answer has been found"""
         return hmac.new(config.captcha_key, self.solution).hexdigest()
 
-def checkResponse(response, solution):
+
+def check_response(response, solution):
     """Compares a given solution hash with the response provided"""
     valid = False
     digest = hmac.new(config.captcha_key, response.upper()).hexdigest()
-    if hmac.compare_digest(digest, solution.encode('ascii','ignore')): 
+    if hmac.compare_digest(digest, solution.encode('ascii', 'ignore')):
         conn = config.engine.connect()
         result = conn.execute(
             select([_captcha]).where(_captcha.c.hmac == digest)
@@ -88,8 +95,7 @@ def checkResponse(response, solution):
         if row is not None:
             valid = True
             conn.execute(
-                delete(_captcha).where(_captcha.c.hmac==row['hmac'])
+                delete(_captcha).where(_captcha.c.hmac == row['hmac'])
             )
         conn.close()
     return valid
-
