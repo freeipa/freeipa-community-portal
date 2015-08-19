@@ -68,10 +68,12 @@ class SelfServiceUserRegistration(object):
 
     def POST(self, **kwargs):  # pylint: disable=invalid-name
         """POST /user"""
+        errors = []
         user = User(kwargs)
-        errors = check_captcha(kwargs)
+        errors.extend(user.validate())
+        errors.extend(check_captcha(kwargs))
         if not errors:
-            errors = user.save()
+            errors.extend(user.save())
         if not errors:
             # email the admin that the user has signed up
             SignUpMailer(user).mail()
@@ -100,11 +102,14 @@ class RequestSelfServicePasswordReset(object):
 
     def POST(self, **kwargs):
         """accepts a username and initiates a reset"""
-        errors = check_captcha(kwargs)
-        if not errors and not kwargs['username']:
-            errors = "Username is required"
+        errors = []
+        if not kwargs['username']:
+            errors.append("Username is required.")
+        errors.extend(check_captcha(kwargs))
         if errors:
-            return render('request_reset.html', errors=errors, captcha=CaptchaHelper())
+            return render('request_reset.html',
+                          errors=errors,
+                          captcha=CaptchaHelper())
         r = PasswordReset(kwargs['username'])
         r.save()
         if r.check_valid():
@@ -153,9 +158,9 @@ def render(template, **args):
 
 def check_captcha(args):
     if not check_response(args['response'], args['solution']):
-        return "Incorrect Captcha response"
+        return ["Incorrect Captcha response"]
     else:
-        return None
+        return []
 
 
 conf = {

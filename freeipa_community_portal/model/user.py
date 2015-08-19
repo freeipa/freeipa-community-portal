@@ -42,6 +42,20 @@ class User(object):  # pylint: disable=too-few-public-methods
             self.username = self.given_name[0] + self.family_name
         self.email = args.get("email", "")
 
+    def validate(self):
+        err = []
+        if not self.given_name:
+            err.append('Given name is required.')
+        if not self.family_name:
+            err.append('Family name is required.')
+        if not self.email or "@" not in self.email:
+            err.append("Invalid email address.")
+        try:
+            self.check_available()
+        except errors.DuplicateEntry as exc:
+            err.append(exc.msg)
+        return err
+
     def save(self):
         """Save the model
 
@@ -51,14 +65,42 @@ class User(object):  # pylint: disable=too-few-public-methods
         If there are validation errors, returns the error message. Otherwise
         returns None
         """
-        error = None
+        err = []
         try:
             self._call_api()
         except (errors.ValidationError,
                 errors.RequirementError,
-                errors.DuplicateEntry) as err:
-            error = err.msg
-        return error
+                errors.DuplicateEntry) as exc:
+            err.append(exc.msg)
+        return err
+
+    def check_available(self):
+        """Checks if the user name is still available.
+
+        For a better user experience, this check is done in advanced.
+        """
+        api_connect()
+        message = 'active user with name "%(user)s" already exists' % {
+            'user': self.username
+        }
+        # Check if the username conflicts with an existing user. The check
+        # is not perfect. A user might be created before the stage user is
+        # activated. The code also suffers from a race condition. It's as
+        # good as it can get without a better API, though.
+        # see https://fedorahosted.org/freeipa/ticket/5186
+        try:
+            api.Command.user_show(uid=self.username)
+        except errors.NotFound:
+            pass
+        else:
+            raise errors.DuplicateEntry(message=message)
+
+        try:
+            api.Command.stageuser_show(uid=self.username)
+        except errors.NotFound:
+            pass
+        else:
+            raise errors.DuplicateEntry(message=message)
 
     def _call_api(self):
         """performs the actual API call. seperate method for testing purposes
@@ -69,5 +111,5 @@ class User(object):  # pylint: disable=too-few-public-methods
             givenname=self.given_name,
             sn=self.family_name,
             uid=self.username,
-            mail=self.email
+            mail=self.email,
         )
