@@ -1,18 +1,207 @@
-#!/bin/bash
+#!/usr/bin/python2.7
+# Authors:
+#  Christian Heimes <cheimes@redhat.com>
+#
+# Copyright (C) 2015  Red Hat
+# see file 'COPYING' for use and warranty information
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-ipa privilege-add 'Portal management privilege' --desc='Portal privileges'
-ipa privilege-add-permission 'Portal management privilege' \
-    --permission='System: Add Stage User' \
-    --permission='System: Read Stage User' \
-    --permission='System: Change User password' \
-    --permission='System: Read User Standard Attributes' \
-    --permission='System: Read User Addressbook Attributes'
-ipa role-add 'Portal management' --desc="self-service portals"
-ipa role-add-privilege 'Portal management' --privilege='Portal management privilege'
-ipa user-add --first='Self' --last="Service" portal
-ipa role-add-member --users=portal 'Portal management'
+import argparse
+import logging
+import os
+import pwd
+import subprocess
+
+from ipalib import api
+from ipalib import errors
 
 
-# ipa-getkeytab -s cypher.derny.test -p portal@DERNY.TEST -k /etc/ipa/portal.keytab
-# chown apache:apache /etc/ipa/portal.keytab
-# su -s /bin/sh apache -c "k5start portal"
+logger = logging.getLogger('create-portal-user')
+
+PRIVILEGE = u'Portal management privilege'
+PRIVILEGE_DESCRIPTION = u'Portal privileges'
+PRIVILEGE_PERMISSIONS = [
+    u'System: Add Stage User',
+    u'System: Read Stage User',
+    u'System: Change User password',
+    u'System: Read User Standard Attributes',
+    u'System: Read User Addressbook Attributes',
+]
+ROLE = u'Portal management'
+ROLE_DESCRIPTION = u'self-service portals'
+USER = u'portal'
+KEYTAB_OWNER = 'apache'
+KEYTAB = '/etc/ipa/portal.keytab'
+
+
+def tounicode(s):
+    if s is None:
+        return None
+    return s.decode('utf-8')
+
+
+parser = argparse.ArgumentParser(
+    description='Create user for community portal'
+)
+parser.add_argument(
+    '--privilege',
+    dest='privilege',
+    help="Privilege for portal management (default: '%s')" % PRIVILEGE,
+    default=PRIVILEGE,
+    type=tounicode
+)
+parser.add_argument(
+    '--role',
+    dest='role',
+    help="Role name for portal management (default: '%s')" % ROLE,
+    default=ROLE,
+    type=tounicode
+)
+parser.add_argument(
+    '--user',
+    dest='username',
+    help="Community portal user (default: '%s')" % USER,
+    default=USER,
+    type=tounicode
+)
+parser.add_argument(
+    '--keytab-owner',
+    dest='keytab_owner',
+    help="Owner of the keytab file (default: '%s')" % KEYTAB_OWNER,
+    default=KEYTAB_OWNER,
+    type=pwd.getpwnam
+)
+parser.add_argument(
+    '--keytab',
+    dest='keytab',
+    help="File name of Kerberos client keytab (default: '%s')" % KEYTAB,
+    default=KEYTAB,
+    type=str
+)
+parser.add_argument(
+    '--no-keytab',
+    dest='retrieve_keytab',
+    help="Don't retrieve a client keytab (default: yes)",
+    action='store_false'
+)
+
+
+def api_connect():
+    """Initialize and connect to FreeIPA's RPC server.
+    """
+    if not api.isdone('bootstrap'):
+        logger.debug("Bootstrapping FreeIPA API ...")
+        api.bootstrap(context='cli', log=None)
+        api.finalize()
+
+    if not api.Backend.rpcclient.isconnected():
+        logger.debug("Connecting to FreeIPA RPC ...")
+        api.Backend.rpcclient.connect()
+
+    api.Command.ping()
+
+
+def create_privilege(name, permissions):
+    try:
+        api.Command.privilege_add(
+            name,
+            description=PRIVILEGE_DESCRIPTION)
+    except errors.DuplicateEntry:
+        logger.warn("Privilege '%s' already exists", name)
+    else:
+        logger.info("Created privilege '%s'", name)
+    for permission in permissions:
+        try:
+            api.Command.privilege_add_permission(
+                name,
+                permission=permission)
+        except errors.ValidationError:
+            logger.warn("    Cannot add permission '%s' to privilege",
+                        permission)
+        else:
+            logger.info("    Added permission '%s' to privilege",
+                        permission)
+
+
+def create_role(name, privilege):
+    try:
+        api.Command.role_add(
+            name,
+            description=ROLE_DESCRIPTION)
+    except errors.DuplicateEntry:
+        logger.warn("Role '%s' already exists", name)
+    else:
+        logger.info("Created role '%s'", name)
+
+    api.Command.role_add_privilege(name, privilege=privilege)
+    logger.info("Added privilege '%s' to role '%s'", privilege, name)
+
+
+def create_user(name):
+    try:
+        api.Command.user_add(name, givenname=u'Self', sn=u'Service')
+    except errors.DuplicateEntry:
+        logger.warn("User '%s' already exists", name)
+        return False
+    else:
+        logger.info("Created user '%s'", name)
+        return True
+
+
+def add_role(username, rolename):
+    api.Command.role_add_member(rolename, user=username)
+    logger.info("Added role '%s' to user '%s'", rolename, username)
+
+
+def create_keytab(username, keytab, owner):
+    if os.path.isfile(keytab):
+        logger.warn("Keytab '%s' already exists.", keytab)
+        logger.info("Skipping ipa-getkeytab")
+        return False
+    server = api.env.server
+    result = api.Command.user_show(username, all=True)
+    result = result[u'result']
+    principal = result[u'krbprincipalname'][0]
+    cmd = ['ipa-getkeytab', '-s', server, '-p', principal, '-k', keytab]
+    # TODO: --retrieve
+    logger.info("Retrieving keytab...\n    %s", ' '.join(cmd))
+    subprocess.check_call(cmd)
+    os.chown(keytab, owner.pw_uid, owner.pw_gid)
+    os.chmod(keytab, 0o600)
+    return True
+
+
+def main():
+    args = parser.parse_args()
+    try:
+        api_connect()
+    except errors.PublicError as e:
+        parser.exit(2, "ERROR: FreeIPA is not responding:\n    %s\n" % e)
+    create_privilege(args.privilege, PRIVILEGE_PERMISSIONS)
+    create_role(args.role, args.privilege)
+    create_user(args.username)
+    add_role(args.username, args.role)
+    if args.retrieve_keytab:
+        create_keytab(args.username, args.keytab, args.keytab_owner)
+    parser.exit(0, 'Done')
+
+
+if __name__ == '__main__':
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter("%(message)s", None)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    main()
