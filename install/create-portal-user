@@ -122,17 +122,32 @@ def create_privilege(name, permissions):
         logger.warn("Privilege '%s' already exists", name)
     else:
         logger.info("Created privilege '%s'", name)
+    value = api.Command.privilege_show(name)
+    result = value[u'result']
+    memberof_permissions = set(result.get(u'memberof_permission', ()))
     for permission in permissions:
+        if permission in memberof_permissions:
+            logger.info("    Privilege already has permission '%s'.",
+                        permission)
+            continue
         try:
-            api.Command.privilege_add_permission(
+            # In some cases privilege_add_permission() doesn't raise an
+            # exception. https://fedorahosted.org/freeipa/ticket/5242
+            value = api.Command.privilege_add_permission(
                 name,
-                permission=permission)
+                permission=permission
+            )
         except errors.ValidationError:
-            logger.warn("    Cannot add permission '%s' to privilege",
+            logger.warn("    Cannot add permission '%s' to privilege.",
                         permission)
         else:
-            logger.info("    Added permission '%s' to privilege",
-                        permission)
+            if value[u'completed'] == 0:
+                failed = value[u'failed'][u'member'][u'permission'][0]
+                logger.error("    Cannot add permission %s: '%s'",
+                             permission, ' '.join(failed))
+            else:
+                logger.info("    Added permission '%s' to privilege.",
+                            permission)
 
 
 def create_role(name, privilege):
@@ -141,28 +156,28 @@ def create_role(name, privilege):
             name,
             description=ROLE_DESCRIPTION)
     except errors.DuplicateEntry:
-        logger.warn("Role '%s' already exists", name)
+        logger.warn("Role '%s' already exists.", name)
     else:
         logger.info("Created role '%s'", name)
 
     api.Command.role_add_privilege(name, privilege=privilege)
-    logger.info("Added privilege '%s' to role '%s'", privilege, name)
+    logger.info("Added privilege '%s' to role '%s'.", privilege, name)
 
 
 def create_user(name):
     try:
         api.Command.user_add(name, givenname=u'Self', sn=u'Service')
     except errors.DuplicateEntry:
-        logger.warn("User '%s' already exists", name)
+        logger.warn("User '%s' already exists.", name)
         return False
     else:
-        logger.info("Created user '%s'", name)
+        logger.info("Created user '%s'.", name)
         return True
 
 
 def add_role(username, rolename):
     api.Command.role_add_member(rolename, user=username)
-    logger.info("Added role '%s' to user '%s'", rolename, username)
+    logger.info("Added role '%s' to user '%s'.", rolename, username)
 
 
 def create_keytab(username, keytab, owner):
