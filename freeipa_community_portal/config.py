@@ -84,7 +84,7 @@ class Config(object):
         """Create engine and tables
         """
         if self._engine is not None:
-            self._engine.close()
+            self._engine.dispose()
         self._engine = create_engine('sqlite:///' + self.communityportal_db)
         self.metadata.create_all(self._engine)
 
