@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import cherrypy
+
 from freeipa_community_portal import app
 from freeipa_community_portal.config import config
 

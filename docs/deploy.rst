@@ -49,8 +49,7 @@ Finally, the portal itself::
     pip install git+https://github.com/freeipa/freeipa-community-portal.git
 
 This will automatically unpack a couple of things to the places that we need 
-them. Of note is that it unpacks freeipa_community_portal.wsgi, which unpacks 
-to <python_path>/libexec/, and which is an executable, WSGI-compatible script.
+them.
 
 Before continuing into the installation, the server should be enrolled as a 
 FreeIPA client of the FreeIPA domain it belongs to. Running::
@@ -101,17 +100,6 @@ After this, the installer does::
 which loosens SELinux security so that the portal can send mail. Without this,
 the portal will crash when it attempts to send mail.
 
-Finally, the portal creates a directory, /var/www/wsgi, and symlinks the wsgi
-executable into this directory, so::
-
-    mkdir -P /var/www/wsgi
-    ln -s /usr/libexec/freeipa_community_portal.wsgi \
-          /var/www/wsgi/freeipa_community_portal.wsgi
-
-This is the expected location of the WSGI file according to the provided httpd
-conf file. Is this best practice? I have no idea. Probably not. I'm not very
-good at Apache. If you choose to install it somewhere different, just make sure
-that change is reflected in your Apache configuration file.
 
 Post-installation
 -----------------

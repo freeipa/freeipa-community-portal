@@ -15,12 +15,11 @@ LOGFILE = '/var/log/freeipa-portal-install.log'
 PORTAL_CONF = '/etc/freeipa_community_portal.ini'
 HTTPD_CONF = '/etc/httpd/conf.d/freeipa_community_portal.conf'
 VAR_DIR = '/var/lib/freeipa_community_portal'
-WSGI_DIR = '/var/www/wsgi'
-EXECUTABLE = 'freeipa_community_portal.wsgi'
 WEBSERVER_USER = pwd.getpwnam('apache')
 
 
 logger = logging.getLogger()
+
 
 # borrowing a bunch of code from the ipsilon installer
 def openlogs():
@@ -112,20 +111,6 @@ def install(opts):
     logger.info('setting httpd_can_sendmail SELinux bool')
     subprocess.call(['setsebool', '-P',  'httpd_can_sendmail', 'on'])
 
-    # create a directory to store our public scripts.
-    if not os.path.exists(WSGI_DIR):
-        logger.info('creating directory for WSGI script')
-        os.makedirs(WSGI_DIR, mode=0o755)
-    # remove a file that already exists, if there is one
-    if os.path.lexists(os.path.join(WSGI_DIR, EXECUTABLE)):
-        logger.warning('executable already exists, overwriting!')
-        os.remove(os.path.join(WSGI_DIR, EXECUTABLE))
-    # and then symlink the executable from libexec to the public script dir
-    logger.info('symlinking WSGI executable')
-    os.symlink(
-        os.path.join(PACKAGE_DATA_DIR, EXECUTABLE),
-        os.path.join(WSGI_DIR, EXECUTABLE))
-
 
 def uninstall(opts):
     logger.info('Uninstallation started')
@@ -146,12 +131,6 @@ def uninstall(opts):
     logger.info('deleting ' + VAR_DIR)
     if os.path.exists(VAR_DIR):
         shutil.rmtree(VAR_DIR)
-
-    # remove the wsgi script, if it exists.
-    # leave the wsgi directory. idk it feels like something else might use that
-    if os.path.isfile(os.path.join(WSGI_DIR, EXECUTABLE)):
-        logger.info('deleting wsgi symlink')
-        os.remove(os.path.join(WSGI_DIR, EXECUTABLE))
 
 
 def is_uninstall(opts):
