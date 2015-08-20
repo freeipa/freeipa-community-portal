@@ -16,19 +16,20 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-""" User model """
-from . import api_connect
-
+"""User model
+"""
 from ipalib import api, errors
 
+from . import api_connect
 
-class User(object): # pylint: disable=too-few-public-methods
+
+class User(object):  # pylint: disable=too-few-public-methods
     """ User model
 
     Represents a user inside of the community portal, and contains code to
     commit changes to the ipa server
     """
+
     def __init__(self, args=None):
         """ Takes a dictionary of attributes to assign to the user """
         if args is None:
@@ -53,7 +54,9 @@ class User(object): # pylint: disable=too-few-public-methods
         error = None
         try:
             self._call_api()
-        except (errors.ValidationError, errors.RequirementError, errors.DuplicateEntry) as err:
+        except (errors.ValidationError,
+                errors.RequirementError,
+                errors.DuplicateEntry) as err:
             error = err.msg
         return error
 
@@ -62,7 +65,7 @@ class User(object): # pylint: disable=too-few-public-methods
         """
         api_connect()
 
-        api.Command.stageuser_add( # pylint: disable=no-member
+        api.Command.stageuser_add(  # pylint: disable=no-member
             givenname=self.given_name,
             sn=self.family_name,
             uid=self.username,

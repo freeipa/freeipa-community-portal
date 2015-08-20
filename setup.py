@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from setuptools import setup
-from glob import glob
+
 
 with open('requirements.txt') as f:
     requirements = [
@@ -42,18 +42,18 @@ setup(name='freeipa_community_portal',
           'freeipa_community_portal.model',
           'freeipa_community_portal.mailers',
       ],
-      package_data = {
+      package_data={
           'freeipa_community_portal': [
               'freeipa_community_portal.wsgi',
               'assets/*/*',
               'conf/freeipa_community_portal.ini',
               'conf/httpd.conf',
               'templates/*.html',
-              ],
+          ],
           # TODO: move these somewhere where they can be edited by the user
           'freeipa_community_portal.mailers': ['templates/*.txt'],
       },
-      scripts = [
+      scripts=[
           'install/freeipa-portal-install',
           'install/create-portal-user'
       ],

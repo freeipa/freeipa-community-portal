@@ -17,28 +17,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime, timedelta
-import os
 import base64
-
-from sqlalchemy import Table, Column, String, DateTime
-from sqlalchemy.sql import select, insert, delete
+import os
+from datetime import datetime, timedelta
 
 from ipalib import api, errors
+
+from sqlalchemy import Column, DateTime, String, Table
+from sqlalchemy.sql import delete, select
 
 from . import api_connect
 from ..config import config
 
 _password_reset = Table('password_reset', config.metadata,
-    Column('username', String, primary_key=True),
-    Column('token', String),
-    Column('timestamp', DateTime)
-)
+                        Column('username', String, primary_key=True),
+                        Column('token', String),
+                        Column('timestamp', DateTime)
+                        )
 
 USE_BY = timedelta(days=3)
 
+
 class PasswordReset(object):
-    """Represents a password reset object"""
+    """Represents a password reset object
+    """
 
     def __init__(self, username):
         self.username = username
@@ -60,7 +62,8 @@ class PasswordReset(object):
         conn = config.engine.connect()
         # and grab a record cooresponding to this username
         result = conn.execute(
-            select([_password_reset]).where(_password_reset.c.username == username)
+            select([_password_reset]).where(
+                _password_reset.c.username == username)
         )
 
         row = result.first()
@@ -75,7 +78,7 @@ class PasswordReset(object):
         else:
             reset = PasswordReset(row['username'])
             reset.token = row['token']
-            reset.timestamp =  row['timestamp']
+            reset.timestamp = row['timestamp']
 
         # close our resources
         conn.close()
@@ -89,7 +92,7 @@ class PasswordReset(object):
                 _password_reset.insert().values(
                     username=self.username,
                     token=self.token,
-                    timestamp = self.timestamp
+                    timestamp=self.timestamp
                 )
             )
             conn.close()
@@ -109,11 +112,9 @@ class PasswordReset(object):
             self._valid = False
             return self._valid
 
-        # i'm sorry mom
-        if response['result'].has_key('mail') \
-                and response['result']['mail'] is not None \
-                and not response['result']['mail'][0].isspace():
-            self.email = response['result']['mail'][0]
+        mail = response['result'].get('mail')
+        if mail is not None and mail[0].isspace():
+            self.email = mail
             self._valid = True
         else:
             self._valid = False
@@ -130,6 +131,7 @@ class PasswordReset(object):
     def expire(username):
         conn = config.engine.connect()
         conn.execute(
-            delete(_password_reset).where(_password_reset.c.username == username)
+            delete(_password_reset).where(
+                _password_reset.c.username == username)
         )
         conn.close()
