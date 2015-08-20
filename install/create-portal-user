@@ -34,7 +34,7 @@ PRIVILEGE = u'Portal management privilege'
 PRIVILEGE_DESCRIPTION = u'Portal privileges'
 PRIVILEGE_PERMISSIONS = [
     u'System: Add Stage User',
-    u'System: Read Stage User',
+    u'System: Read Stage Users',
     u'System: Change User password',
     u'System: Read User Standard Attributes',
     u'System: Read User Addressbook Attributes',
