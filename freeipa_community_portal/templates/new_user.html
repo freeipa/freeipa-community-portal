@@ -52,6 +52,24 @@
                         name="email" value="{{ user.email }}" />
             </div>
         </div>
+        <div class="form-group">
+            <label for="password" class="col-sm-2 control-label">
+                Preliminary Password:
+            </label>
+            <div class="col-sm-6">
+                <input type="password" class="form-control"
+                        name="password" value="{{ user.password }}" />
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="password2" class="col-sm-2 control-label">
+                Password (repeat):
+            </label>
+            <div class="col-sm-6">
+                <input type="password" class="form-control"
+                        name="password2" value="{{ user.password2 }}"/>
+            </div>
+        </div>
         <div style='display: none'>
             <input type="hidden" name="solution" 
                     value="{{ captcha.solution_hash() }}" />

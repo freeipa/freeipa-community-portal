@@ -37,6 +37,8 @@ class User(object):  # pylint: disable=too-few-public-methods
         self.given_name = args.get("given_name", "")
         self.family_name = args.get("family_name", "")
         self.username = args.get("username", "")
+        self.password = args.get("password", "")
+        self.password2 = args.get("password2", "")
         if not self.username and self.given_name:
             # if the username is blank, set it to a default
             self.username = self.given_name[0] + self.family_name
@@ -50,6 +52,10 @@ class User(object):  # pylint: disable=too-few-public-methods
             err.append('Family name is required.')
         if not self.email or "@" not in self.email:
             err.append("Invalid email address.")
+        if self.password != self.password2:
+            err.append("Passwords mismatch.")
+        elif len(self.password) < 8:
+            err.append("Password too short, need 8 characters or more.")
         try:
             self.check_available()
         except errors.DuplicateEntry as exc:
@@ -112,4 +118,5 @@ class User(object):  # pylint: disable=too-few-public-methods
             sn=self.family_name,
             uid=self.username,
             mail=self.email,
+            userpassword=self.password
         )
