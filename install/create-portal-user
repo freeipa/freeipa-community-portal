@@ -43,7 +43,7 @@ ROLE = u'Portal management'
 ROLE_DESCRIPTION = u'self-service portals'
 USER = u'portal'
 KEYTAB_OWNER = 'apache'
-KEYTAB = '/etc/ipa/portal.keytab'
+KEYTAB = '/etc/ipa/extensions/community-portal/portal.keytab'
 
 
 def tounicode(s):

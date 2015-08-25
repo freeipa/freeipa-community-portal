@@ -11,10 +11,10 @@ import pwd
 
 from freeipa_community_portal import PACKAGE_DATA_DIR
 
-LOGFILE = '/var/log/freeipa-portal-install.log'
-PORTAL_CONF = '/etc/freeipa_community_portal.ini'
-HTTPD_CONF = '/etc/httpd/conf.d/freeipa_community_portal.conf'
-VAR_DIR = '/var/lib/freeipa_community_portal'
+LOGFILE = '/var/log/ipa-community-portal-install.log'
+PORTAL_CONF = '/etc/ipa/extensions/community-portal/portal.ini'
+HTTPD_CONF = '/etc/httpd/conf.d/ipa-community-portal.conf'
+VAR_DIR = '/var/lib/ipa-community-portal'
 WSGI_DIR = '/var/www/wsgi'
 EXECUTABLE = 'freeipa_community_portal.wsgi'
 WEBSERVER_USER = pwd.getpwnam('apache')
@@ -81,6 +81,9 @@ def install(opts):
 
     # first things first, if the user hasn't supplied a config file, then
     # give them one with sane defaults
+    confdir = os.path.dirname(PORTAL_CONF)
+    if not os.path.isdir(confdir):
+        os.makedirs(confdir, mode=0o755)
     if not os.path.isfile(PORTAL_CONF):
         logger.warning('no portal config, creating one that might not work')
         conf_src = os.path.join(
@@ -94,7 +97,7 @@ def install(opts):
             os.path.join(PACKAGE_DATA_DIR, 'conf', 'httpd.conf'),
             HTTPD_CONF)
 
-    # create a /var/lib/freeipa-community-portal, if it does not exist
+    # create a /var/lib/ipa-community-portal, if it does not exist
     # this is where our databases live
     if not os.path.isdir(VAR_DIR):
         os.makedirs(VAR_DIR, mode=0o750)
@@ -141,7 +144,7 @@ def uninstall(opts):
     if os.path.isfile(HTTPD_CONF):
         os.remove(HTTPD_CONF)
 
-    # delete /var/lib/freeipa-community-portal and everything in it
+    # delete /var/lib/ipa-community-portal and everything in it
     # this is where our databases and key lived
     logger.info('deleting ' + VAR_DIR)
     if os.path.exists(VAR_DIR):

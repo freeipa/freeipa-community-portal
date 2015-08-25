@@ -68,25 +68,25 @@ using this script, you can skip this section and jump to the next thing, which
 outlines some post-install necessities
 
 First, if it is not already present, the installer copies 
-share/freeipa_community_portal/conf/freeipa_community_portal.ini to 
-/etc/freeipa_community_portal.ini. The latter location is where the portal 
-searches for the config, which is mostly used for email settings. If it is not
-present or formatted correctly, the portal will crash on start. Even if you're
-not using the install, I recommend copying this file over, instead of typing
-it from scratch, to avoid errors.
+freeipa_community_portal/conf/freeipa_community_portal.ini to
+/etc/ipa/extensions/community-portal/portal.ini. The latter location is where
+the portal searches for the config, which is mostly used for email settings.
+If it is not present or formatted correctly, the portal will crash on start.
+Even if you're not using the install, I recommend copying this file over,
+instead of typing it from scratch, to avoid errors.
 
 You must edit this configuration file in order for the application to work 
 properly. If the email settings are misconfigured, the application will crash.
 
 Next, the installer copies the apache config from the conf directory to 
-/etc/httpd/conf.d/freeipa_community_portal.conf. If you're doing a custom 
+/etc/httpd/conf.d/ipa-community-portal.conf. If you're doing a custom
 installation of the portal, you probably will not need this file, because you
 probably know what you're doing.
 
 Then, the installer creates the directory where the portal keeps its database::
 
-    mkdir -p -m 750 /var/lib/freeipa_community_portal
-    chown apache:apache /var/lib/freeipa_community_portal/
+    mkdir -p -m 750 /var/lib/ipa-community-portal
+    chown apache:apache /var/lib/ipa-community-portal
 
 If Apache doesn't own this folder, it will vomit when attempting to put 
 database in it. Next, the installer generates a random key and stores it in a
@@ -148,15 +148,14 @@ the portal user. A client keytab for the portal can be acquired with
 ``ipa-getkeytab``. You must properly secure the keytab, so it can only be
 read by the webserver::
 
-    ipa-getkeytab -s IPA_SERVER_HOSTNAME -p portal@YOUR.REALM -k /etc/ipa/portal.keytab
-    chown apache:apache /etc/ipa/portal.keytab
-    chmod 640 /etc/ipa/portal.keytab
+    ipa-getkeytab -s IPA_SERVER_HOSTNAME -p portal@YOUR.REALM -k /etc/ipa/extensions/community-portal/portal.keytab
+    chown apache:apache /etc/ipa/extensions/community-portal/portal.keytab
+    chmod 640 /etc/ipa/extensions/community-portal/portal.keytab
 
 If you don't remember the values for IPA server and realm, have a look at
-``/etc/ipa/default.conf``. You can set the path to keytab in
-``/etc/freeipa_community_portal.ini``. The app sets the environment variable
-``KRB5_CLIENT_KTNAME``, when the value is not empty. ipalib picks the keytab
-up automatically.
+``/etc/ipa/default.conf``. You can set the path to keytab in ``portal.ini``.
+The app sets the environment variable ``KRB5_CLIENT_KTNAME``, when the value
+is not empty. ipalib picks the keytab up automatically.
 
 After all this, you should probably set up and configure mod_ssl and put the 
 app behind HTTPS, but that is outside of the scope of this guide. 
