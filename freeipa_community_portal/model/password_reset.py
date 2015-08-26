@@ -113,8 +113,8 @@ class PasswordReset(object):
             return self._valid
 
         mail = response['result'].get('mail')
-        if mail is not None and mail[0].isspace():
-            self.email = mail
+        if mail and mail[0].strip():
+            self.email = mail[0]
             self._valid = True
         else:
             self._valid = False
