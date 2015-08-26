@@ -26,22 +26,43 @@ import subprocess
 
 from ipalib import api
 from ipalib import errors
+from ipapython.dn import DN
 
 
 logger = logging.getLogger('create-portal-user')
 
-PRIVILEGE = u'Portal management privilege'
-PRIVILEGE_DESCRIPTION = u'Portal privileges'
+SELFSERVICE_GROUP = u'self-service'
+SELFSERVICE_GROUP_DESCRIPTION = u"""Self-service users
+Members of the group are able to use the self-service portal for some tasks,
+e.g. request a password reset."""
+
+SELFSERVICE_USER_PERMISSION = u'Self-Service Change User Password'
+SELFSERVICE_STAGEUSER_PERMISSION = u'Self-Service Change Stage User Password'
+
+SELFSERVICE_USERCLASS = u'self-service capable'
+SELFSERVICE_AUTOMEMBER_DESCRIPTION = (
+    u"Automember rule for self-service portals to add approved "
+    u"self-registered users to self-service group."
+)
+
+PRIVILEGE = u'Self-Service Management Privilege'
+PRIVILEGE_DESCRIPTION = u"Self-service portal privilege for e.g. password resets"
 PRIVILEGE_PERMISSIONS = [
+    SELFSERVICE_USER_PERMISSION,
+    SELFSERVICE_STAGEUSER_PERMISSION,
     u'System: Add Stage User',
     u'System: Read Stage User',
-    u'System: Change User password',
     u'System: Read User Standard Attributes',
     u'System: Read User Addressbook Attributes',
 ]
-ROLE = u'Portal management'
-ROLE_DESCRIPTION = u'self-service portals'
-USER = u'portal'
+
+ROLE = u'Self-Service Portal Management'
+ROLE_DESCRIPTION = u'Self-service portals'
+
+USER = u'self-service-portal'
+USER_FIRST = u'Self-Service'
+USER_LAST = u'Portal'
+
 KEYTAB_OWNER = 'apache'
 KEYTAB = '/etc/ipa/portal.keytab'
 
@@ -54,6 +75,20 @@ def tounicode(s):
 
 parser = argparse.ArgumentParser(
     description='Create user for community portal'
+)
+parser.add_argument(
+    '--selfservice-group',
+    dest='selfservice_group',
+    help="Group for self-service users (default: '%s')" % SELFSERVICE_GROUP,
+    default=SELFSERVICE_GROUP,
+    type=tounicode
+)
+parser.add_argument(
+    '--userclass',
+    dest='automember_userclass',
+    help="User class value for automember rule (default: '%s')" % SELFSERVICE_USERCLASS,
+    default=SELFSERVICE_USERCLASS,
+    type=tounicode
 )
 parser.add_argument(
     '--privilege',
@@ -113,6 +148,61 @@ def api_connect():
     api.Command.ping()
 
 
+def create_selfservice_group(name):
+    try:
+        api.Command.group_add(
+            name,
+            description=SELFSERVICE_GROUP_DESCRIPTION)
+    except errors.DuplicateEntry:
+        logger.warn("Group '%s' already exists.", name)
+    else:
+        logger.info("Created group '%s'", name)
+
+
+def create_selfservice_permission(name, permtype, memberof=None, extrafilter=None):
+    admins = DN(('cn', u'admins'), api.env.container_group, api.env.basedn)
+    options = {
+        'attrs': [u'passwordhistory', u'userpassword', u'krbprincipalkey'],
+        'ipapermbindruletype': u'permission',
+        'ipapermright': [u'write'],
+        'type': permtype,
+        'extratargetfilter': [
+            # Explicitly forbid password resets for admins.
+            u'(!(memberOf=%s))' % admins,
+        ]
+    }
+    if memberof is not None:
+        options['memberof'] = [memberof]
+    if extrafilter is not None:
+        options['extratargetfilter'].append(extrafilter)
+    try:
+        api.Command.permission_add(name, **options)
+    except errors.DuplicateEntry:
+        logger.warn("Permission '%s' already exists.", name)
+    else:
+        logger.info("Created permission '%s' for '%s'", name, permtype)
+
+
+def create_automember_rule(groupname, userclass):
+    try:
+        api.Command.automember_add(
+            groupname,
+            type=u'group',
+            description=SELFSERVICE_AUTOMEMBER_DESCRIPTION)
+    except errors.DuplicateEntry:
+        logger.warn("Automember rule for group '%s' already exists.",
+                    groupname)
+    else:
+        logger.info("Created automember rule for '%s'", groupname)
+    api.Command.automember_add_condition(
+        groupname,
+        type=u'group',
+        key=u'userclass',
+        automemberinclusiveregex=userclass,
+    )
+    logger.info("    Added rule userclass='%s'", userclass)
+
+
 def create_privilege(name, permissions):
     try:
         api.Command.privilege_add(
@@ -151,7 +241,10 @@ def create_role(name, privilege):
 
 def create_user(name):
     try:
-        api.Command.user_add(name, givenname=u'Self', sn=u'Service')
+        api.Command.user_add(
+            name,
+            givenname=USER_FIRST,
+            sn=USER_LAST)
     except errors.DuplicateEntry:
         logger.warn("User '%s' already exists", name)
         return False
@@ -170,7 +263,17 @@ def create_keytab(username, keytab, owner):
         logger.warn("Keytab '%s' already exists.", keytab)
         logger.info("Skipping ipa-getkeytab")
         return False
-    server = api.env.server
+
+    directory = os.path.dirname(keytab)
+    if not os.path.isdir(directory):
+        os.makedirs(directory, mode=0o755)
+
+    try:
+        server = api.env.server
+    except AttributeError:
+        # We are running on the same host as the IPA service.
+        server = api.env.host
+
     result = api.Command.user_show(username, all=True)
     result = result[u'result']
     principal = result[u'krbprincipalname'][0]
@@ -183,12 +286,56 @@ def create_keytab(username, keytab, owner):
     return True
 
 
+def _cleanup(args):
+    """Internal testing helper
+    """
+    commands = [
+        ('user_del', args.username, {}),
+        ('role_del', args.role, {}),
+        ('privilege_del', args.privilege, {}),
+        ('automember_del', args.selfservice_group, {'type': u'group'}),
+        ('permission_del', SELFSERVICE_USER_PERMISSION, {}),
+        ('permission_del', SELFSERVICE_STAGEUSER_PERMISSION, {}),
+        ('group_del', args.selfservice_group, {}),
+    ]
+    for command, arg, kwargs in commands:
+        try:
+            getattr(api.Command, command)(arg, **kwargs)
+        except errors.NotFound:
+            logger.info("- %s('%s')", command, arg)
+        else:
+            logger.info("+ %s('%s')", command, arg)
+
+    try:
+        os.unlink(args.keytab)
+    except OSError as e:
+        logger.error(e)
+
+
 def main():
     args = parser.parse_args()
     try:
         api_connect()
     except errors.PublicError as e:
         parser.exit(2, "ERROR: FreeIPA is not responding:\n    %s\n" % e)
+
+    # _cleanup(args)
+
+    create_selfservice_group(args.selfservice_group)
+    create_selfservice_permission(
+        SELFSERVICE_USER_PERMISSION,
+        u'user',
+        memberof=args.selfservice_group,
+    )
+    create_selfservice_permission(
+        SELFSERVICE_STAGEUSER_PERMISSION,
+        u'stageuser',
+        extrafilter='(userclass=%s)' % args.automember_userclass,
+    )
+    create_automember_rule(
+        args.selfservice_group,
+        args.automember_userclass
+    )
     create_privilege(args.privilege, PRIVILEGE_PERMISSIONS)
     create_role(args.role, args.privilege)
     create_user(args.username)
@@ -204,4 +351,5 @@ if __name__ == '__main__':
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
+
     main()

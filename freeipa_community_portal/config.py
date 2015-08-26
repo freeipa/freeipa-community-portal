@@ -31,6 +31,8 @@ class Config(object):
 
     captcha_length = 4
     umask = 0o027
+    # marker for self-service capable users
+    userclass = u'self-service capable'
 
     metadata = MetaData()
 
