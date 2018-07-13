@@ -6,7 +6,14 @@
 Welcome to FreeIPA Community Portal's documentation!
 ====================================================
 
-Contents:
+Disclaimer
+----------
+This project is currently abandoned. There are now other ideas on how this functionality can be accomplished.
+
+If you are interested in this functionality and want to move forward please indicate your interest on the freeipa-users mailing list and we can discuss next steps.
+
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
@@ -17,7 +24,7 @@ Contents:
    development
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
