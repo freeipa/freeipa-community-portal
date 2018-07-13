@@ -1,8 +1,11 @@
 # FreeIPA Community Portal #
 
-The FreeIPA Community Portal is a web application that acts as a portal through
-which anonymous users can interact with a FreeIPA server for purposes such as
-self-service registration.
+The FreeIPA Community Portal is a web application that acts as a portal through which anonymous users can interact with a FreeIPA server for purposes such as self-service registration.
 
-A complete overview of the rationale and architecture of the Community Portal
-can be found at http://www.freeipa.org/page/V4/Community_Portal
+A complete overview of the rationale and architecture of the Community Portal can be found at [FreeIPA design page](http://www.freeipa.org/page/V4/Community_Portal).
+
+# Current State #
+This project is currently abandoned. There are now other ideas on how this functionality can be accomplished.
+
+If you are interested in this functionality and want to move forward please indicate your interest on the [freeipa-users mailing list](https://lists.fedorahosted.org/archives/list/freeipa-users@lists.fedorahosted.org/) and we can discuss next steps.
+
